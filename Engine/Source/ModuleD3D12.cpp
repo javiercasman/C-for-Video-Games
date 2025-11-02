@@ -8,7 +8,7 @@ ModuleD3D12::ModuleD3D12(HWND wnd) : hWnd(wnd)
 {
 }
 
-bool ModuleD3D12::Init()
+bool ModuleD3D12::init()
 {
 	//Enable debug layer
 #if defined(_DEBUG)
@@ -17,7 +17,6 @@ bool ModuleD3D12::Init()
 	debugInterface->EnableDebugLayer();
 #endif
 
-	//ComPtr<IDXGIFactory6> factory; //mejor declararlo como miembro, mas adelante querremos usarlo
 	UINT createFactoryFlags = 0;
 #if defined(_DEBUG)
 	createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
@@ -25,12 +24,10 @@ bool ModuleD3D12::Init()
 
 	if(FAILED(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&factory)))) return false;
 
-	//ComPtr<IDXGIAdapter4> adapter;
-	//ComPtr<ID3D12Device5> device; //declarar tambien como miembros
 	factory->EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapter));
+
 	if(FAILED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&device)))) return false;
 
-	ComPtr<ID3D12InfoQueue> infoQueue;
 	device.As(&infoQueue);
 	infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
 	infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
@@ -70,13 +67,40 @@ bool ModuleD3D12::Init()
  
 	if (FAILED(factory->CreateSwapChainForHwnd(commandQueue.Get(), hWnd, &swapChainDesc, nullptr, nullptr, &swapChain))) return false;
 
+	if (FAILED(swapChain.As(&swapChain))) return false;
+	frameIndex = swapChain->GetCurrentBackBufferIndex();//habrá q hacer otro?
+
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.NumDescriptors = FrameCount;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	if (FAILED(device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap)))) return false;
 
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
+	rtvDescriptorIncrementSize = device->GetDescriptorHandleIncrementSize(rtvHeapDesc.Type);
 
+	for (UINT i = 0; i < FrameCount; ++i) {
+		if (FAILED(swapChain->GetBuffer(i, IID_PPV_ARGS(&renderTargets[i])))) return false;
+		device->CreateRenderTargetView(renderTargets[i].Get(), nullptr, rtvHandle);
+		rtvHandle.Offset(1, rtvDescriptorIncrementSize); //incrementar by 1 descriptor la size rtvDescr...
+		if (FAILED(device->CreateCommandAllocator(queueDesc.Type, IID_PPV_ARGS(&commandAllocators[i])))) return false;
+	}
+
+	if (FAILED(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocators[frameIndex].Get(), nullptr, IID_PPV_ARGS(&commandList)))) return false;
+	if (FAILED(commandList->Close())) return false;
+
+	if (FAILED(device->CreateFence(fenceValues[frameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)))) return false;
+	fenceValues[frameIndex]++;
+
+	fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+	if (fenceEvent == nullptr)
+	{
+		if (FAILED(HRESULT_FROM_WIN32(GetLastError()))) return false;
+	}
+	// Wait for the command list to execute; we are reusing the same command 
+		// list in our main loop but for now, we just want to wait for setup to 
+		// complete before continuing.
+	//WaitForGpu();
 
     return true; //cambiar, podemos poner true como predeterminado pero mejor usar SUCCEEDED(hr) para ver si ha salido bien o no
 }
@@ -84,6 +108,11 @@ bool ModuleD3D12::Init()
 bool ModuleD3D12::CleanUp()
 {
 	return true;
+}
+
+void ModuleD3D12::update()
+{
+
 }
 
 void ModuleD3D12::preRender()
