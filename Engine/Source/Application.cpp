@@ -5,6 +5,7 @@
 
 Application::Application(int argc, wchar_t** argv, void* hWnd)
 {
+    //aqui añadimos los modulos a modules. tendremos que hacerlo con ModuleD3D12
     modules.push_back(new ModuleInput((HWND)hWnd));
 }
 

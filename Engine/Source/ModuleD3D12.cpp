@@ -1,7 +1,10 @@
 #include "Globals.h"
 #include "ModuleD3D12.h"
+#include "Application.h"
 
-ModuleD3D12::ModuleD3D12()
+
+
+ModuleD3D12::ModuleD3D12(HWND wnd) : hWnd(wnd)
 {
 }
 
@@ -15,17 +18,17 @@ bool ModuleD3D12::Init()
 #endif
 
 	//ComPtr<IDXGIFactory6> factory; //mejor declararlo como miembro, mas adelante querremos usarlo
-
+	UINT createFactoryFlags = 0;
 #if defined(_DEBUG)
-	CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&factory));
-#else
-	CreateDXGIFactory2(0, IID_PPV_ARGS(&factory));
+	createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 #endif
+
+	if(FAILED(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&factory)))) return false;
 
 	//ComPtr<IDXGIAdapter4> adapter;
 	//ComPtr<ID3D12Device5> device; //declarar tambien como miembros
 	factory->EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapter));
-	D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&device));
+	if(FAILED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&device)))) return false;
 
 	ComPtr<ID3D12InfoQueue> infoQueue;
 	device.As(&infoQueue);
@@ -39,7 +42,9 @@ bool ModuleD3D12::Init()
 	queueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 
-	device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue));
+	if (FAILED(device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue)))) return false;
+
+	GetWindowSize(windowWidth, windowHeight);
 
 	//swap chain
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
@@ -50,7 +55,7 @@ bool ModuleD3D12::Init()
 	swapChainDesc.Stereo = FALSE; // Set to TRUE for stereoscopic 3D rendering (VR/3D Vision)
 	swapChainDesc.SampleDesc = { 1, 0 }; // Multisampling { Count, Quality } // Count=1: No multisampling (1 sample per pixel)
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // This buffer will be used as a render target
-	swapChainDesc.BufferCount = 2; // Double buffering:
+	swapChainDesc.BufferCount = FrameCount; // Double buffering:
 	// - 1 front buffer (displayed)
    // - 1 back buffer (rendering)
 	swapChainDesc.Scaling = DXGI_SCALING_STRETCH; // How to scale when window size doesn't match buffer size:
@@ -63,7 +68,15 @@ bool ModuleD3D12::Init()
 	// DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH: Allow full-screen mode switches
    // DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING: Allow tearing in windowed mode (VSync off)
  
-	//factory->CreateSwapChainForHwnd(&commandQueue, 
+	if (FAILED(factory->CreateSwapChainForHwnd(commandQueue.Get(), hWnd, &swapChainDesc, nullptr, nullptr, &swapChain))) return false;
+
+	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	rtvHeapDesc.NumDescriptors = FrameCount;
+	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	if (FAILED(device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap)))) return false;
+
+
 
     return true; //cambiar, podemos poner true como predeterminado pero mejor usar SUCCEEDED(hr) para ver si ha salido bien o no
 }
@@ -76,4 +89,12 @@ bool ModuleD3D12::CleanUp()
 void ModuleD3D12::preRender()
 {
 
+}
+
+void ModuleD3D12::GetWindowSize(UINT &width, UINT &height) 
+{
+	RECT rect;
+	GetClientRect(hWnd, &rect);
+	width = rect.right - rect.left;
+	height = rect.bottom - rect.top;
 }
