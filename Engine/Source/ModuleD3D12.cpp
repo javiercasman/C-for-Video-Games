@@ -117,7 +117,46 @@ void ModuleD3D12::update()
 
 void ModuleD3D12::preRender()
 {
+	//Wait for fence, Reset allocator for current back buffer.
+	frameIndex = swapChain->GetCurrentBackBufferIndex();
 
+	//Esperar a que el CommandAllocator del frame actual esté libre (usando la fence).
+	if (fenceValues[frameIndex] != 0)
+	{
+		Fence->SetEventOnCompletion(fenceValues[frameIndex], fenceEvent);
+		WaitForSingleObject(fenceEvent, INFINITE);
+	}
+
+	//Llamar a Reset() en el CommandAllocator y en la CommandList.
+	commandAllocators[frameIndex]->Reset();
+	commandList->Reset(commandAllocators[frameIndex].Get(), nullptr);
+
+	//Transicionar el back buffer desde PRESENT --> RENDER_TARGET con un ResourceBarrier.
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+}
+
+void ModuleD3D12::postRender()
+{
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	commandList->Close();
+
+	//no sabemos cuantas command lists hay, asi que:
+	ID3D12CommandList* ppCommandLists[] = {commandList.Get()};
+	commandQueue->ExecuteCommandLists(std::size(ppCommandLists), ppCommandLists);
+
+	swapChain->Present(1, 0);
+	
+	//SIGNAL
+}
+
+void ModuleD3D12::render()
+{
+	//Configurar el Render Target View (RTV) para ese back buffer.
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorIncrementSize);
+	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+
+	const float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	commandList->ClearRenderTargetView(rtvHandle, color, 0, nullptr);
 }
 
 void ModuleD3D12::GetWindowSize(UINT &width, UINT &height) 

@@ -15,9 +15,10 @@ public:
 	bool CleanUp();
 	void GetWindowSize(UINT& width, UINT& height);
 private:
-	static const UINT FrameCount = 2; //N buffers para swapchain y rtv
+	static const UINT FrameCount = 2; //N buffers
 	
 	HWND hWnd = NULL;
+
 	ComPtr<IDXGIFactory6> factory;
 	ComPtr<IDXGIAdapter4> adapter;
 	ComPtr<ID3D12Device5> device;
@@ -29,6 +30,7 @@ private:
 	ComPtr<ID3D12CommandAllocator> commandAllocators[FrameCount];
 	ComPtr<ID3D12GraphicsCommandList> commandList;
 	ComPtr<ID3D12Fence> Fence;
+
 	HANDLE fenceEvent;
 	UINT windowWidth = 0;
 	UINT windowHeight = 0;
