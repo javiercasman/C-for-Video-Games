@@ -12,6 +12,8 @@ public:
 	void preRender();
 	void postRender();
 	void render();
+	bool resize();
+	void WaitForGPU();
 	bool CleanUp();
 	void GetWindowSize(UINT& width, UINT& height);
 private:
@@ -24,7 +26,7 @@ private:
 	ComPtr<ID3D12Device5> device;
 	ComPtr<ID3D12InfoQueue> infoQueue;
 	ComPtr<ID3D12CommandQueue> commandQueue;
-	ComPtr<IDXGISwapChain1> swapChain;
+	ComPtr<IDXGISwapChain4> swapChain;
 	ComPtr<ID3D12DescriptorHeap> rtvHeap;
 	ComPtr<ID3D12Resource> renderTargets[FrameCount];
 	ComPtr<ID3D12CommandAllocator> commandAllocators[FrameCount];
@@ -37,4 +39,6 @@ private:
 	UINT rtvDescriptorIncrementSize;
 	UINT frameIndex;
 	UINT64 fenceValues[FrameCount];
+	UINT64 currentFenceValue;
+	//UINT64 fenceCounter;
 };

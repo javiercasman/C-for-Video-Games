@@ -4,7 +4,7 @@
 
 
 
-ModuleD3D12::ModuleD3D12(HWND wnd) : hWnd(wnd)
+ModuleD3D12::ModuleD3D12(HWND wnd) : hWnd(wnd), fenceValues{}, rtvDescriptorIncrementSize(0), frameIndex(0), fenceEvent(nullptr), currentFenceValue(0)
 {
 }
 
@@ -28,10 +28,12 @@ bool ModuleD3D12::init()
 
 	if(FAILED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&device)))) return false;
 
+#if defined(_DEBUG)
 	device.As(&infoQueue);
 	infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
 	infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
 	infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, TRUE);
+#endif
 
 	//command queue
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
@@ -65,10 +67,11 @@ bool ModuleD3D12::init()
 	// DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH: Allow full-screen mode switches
    // DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING: Allow tearing in windowed mode (VSync off)
  
-	if (FAILED(factory->CreateSwapChainForHwnd(commandQueue.Get(), hWnd, &swapChainDesc, nullptr, nullptr, &swapChain))) return false;
+	ComPtr<IDXGISwapChain1> swapChain1;
+	if (FAILED(factory->CreateSwapChainForHwnd(commandQueue.Get(), hWnd, &swapChainDesc, nullptr, nullptr, &swapChain1))) return false;
 
-	if (FAILED(swapChain.As(&swapChain))) return false;
-	frameIndex = swapChain->GetCurrentBackBufferIndex();//habrá q hacer otro?
+	if (FAILED(swapChain1.As(&swapChain))) return false; //QueryInterface
+	frameIndex = swapChain->GetCurrentBackBufferIndex();
 
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
@@ -107,6 +110,9 @@ bool ModuleD3D12::init()
 
 bool ModuleD3D12::CleanUp()
 {
+	WaitForGPU();
+	if (fenceEvent) CloseHandle(fenceEvent);
+	fenceEvent = NULL;
 	return true;
 }
 
@@ -121,42 +127,54 @@ void ModuleD3D12::preRender()
 	frameIndex = swapChain->GetCurrentBackBufferIndex();
 
 	//Esperar a que el CommandAllocator del frame actual esté libre (usando la fence).
-	if (fenceValues[frameIndex] != 0)
+	if (Fence->GetCompletedValue() < fenceValues[frameIndex])
 	{
 		Fence->SetEventOnCompletion(fenceValues[frameIndex], fenceEvent);
 		WaitForSingleObject(fenceEvent, INFINITE);
 	}
+}
 
+void ModuleD3D12::postRender()
+{
+	swapChain->Present(1, 0);
+	
+	currentFenceValue = fenceValues[frameIndex] + 1;
+	//SIGNAL
+	commandQueue->Signal(Fence.Get(), currentFenceValue);
+	fenceValues[frameIndex] = currentFenceValue;
+
+	frameIndex = swapChain->GetCurrentBackBufferIndex();
+}
+
+void ModuleD3D12::render()
+{
 	//Llamar a Reset() en el CommandAllocator y en la CommandList.
 	commandAllocators[frameIndex]->Reset();
 	commandList->Reset(commandAllocators[frameIndex].Get(), nullptr);
 
 	//Transicionar el back buffer desde PRESENT --> RENDER_TARGET con un ResourceBarrier.
-	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
-}
+	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	commandList->ResourceBarrier(1, &barrier);
 
-void ModuleD3D12::postRender()
-{
-	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
-	commandList->Close();
-
-	//no sabemos cuantas command lists hay, asi que:
-	ID3D12CommandList* ppCommandLists[] = {commandList.Get()};
-	commandQueue->ExecuteCommandLists(std::size(ppCommandLists), ppCommandLists);
-
-	swapChain->Present(1, 0);
-	
-	//SIGNAL
-}
-
-void ModuleD3D12::render()
-{
 	//Configurar el Render Target View (RTV) para ese back buffer.
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorIncrementSize);
 	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
-	const float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	//const float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	float colorRed[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	float colorBlue[] = { 0.0f, 0.0f, 1.0f, 1.0f };
+	float* color;
+	if (frameIndex != 0) color = colorRed;
+	else color = colorBlue;
 	commandList->ClearRenderTargetView(rtvHandle, color, 0, nullptr);
+
+	barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	commandList->ResourceBarrier(1, &barrier);
+	commandList->Close();
+
+	//no sabemos cuantas command lists hay, asi que:
+	ID3D12CommandList* ppCommandLists[] = { commandList.Get() };
+	commandQueue->ExecuteCommandLists(std::size(ppCommandLists), ppCommandLists);
 }
 
 void ModuleD3D12::GetWindowSize(UINT &width, UINT &height) 
@@ -166,3 +184,56 @@ void ModuleD3D12::GetWindowSize(UINT &width, UINT &height)
 	width = rect.right - rect.left;
 	height = rect.bottom - rect.top;
 }
+
+void ModuleD3D12::WaitForGPU()
+{
+	commandQueue->Signal(Fence.Get(), ++currentFenceValue);
+	Fence->SetEventOnCompletion(currentFenceValue, fenceEvent);
+	WaitForSingleObject(fenceEvent, INFINITE);
+}
+
+bool ModuleD3D12::resize()
+{
+	unsigned width, height;
+	GetWindowSize(width, height);
+
+	if (width != windowWidth || height != windowHeight)
+	{
+		windowWidth = width;
+		windowHeight = height;
+
+		WaitForGPU();
+
+		for (unsigned i = 0; i < FrameCount; ++i)
+		{
+			renderTargets[i].Reset();
+			fenceValues[i] = 0;
+		}
+
+		DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
+
+		if (FAILED(swapChain->GetDesc(&swapChainDesc))) return false;
+		if (FAILED(swapChain->ResizeBuffers(FrameCount, windowWidth, windowHeight, swapChainDesc.BufferDesc.Format, swapChainDesc.Flags))) return false;
+
+		if (windowWidth > 0 && windowHeight > 0)
+		{
+			//ok = ok && createRenderTargets();
+			D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+			rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+			rtvHeapDesc.NumDescriptors = FrameCount;
+			rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+			if (FAILED(device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap)))) return false;
+
+			CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
+			rtvDescriptorIncrementSize = device->GetDescriptorHandleIncrementSize(rtvHeapDesc.Type);
+
+			for (UINT i = 0; i < FrameCount; ++i) {
+				if (FAILED(swapChain->GetBuffer(i, IID_PPV_ARGS(&renderTargets[i])))) return false;
+				device->CreateRenderTargetView(renderTargets[i].Get(), nullptr, rtvHandle);
+				rtvHandle.Offset(1, rtvDescriptorIncrementSize); //incrementar by 1 descriptor la size rtvDescr...
+			}
+			//ok = ok && createDepthStencil();
+		}
+	}
+}
+
