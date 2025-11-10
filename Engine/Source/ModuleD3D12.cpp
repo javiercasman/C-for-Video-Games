@@ -3,7 +3,6 @@
 #include "Application.h"
 
 
-
 ModuleD3D12::ModuleD3D12(HWND wnd) : hWnd(wnd), fenceValues{}, rtvDescriptorIncrementSize(0), frameIndex(0), fenceEvent(nullptr), currentFenceValue(0)
 {
 }

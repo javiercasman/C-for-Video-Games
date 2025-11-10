@@ -16,6 +16,10 @@ public:
 	void WaitForGPU();
 	bool CleanUp();
 	void GetWindowSize(UINT& width, UINT& height);
+
+	ComPtr<ID3D12Device5>* getDevice() { return &device; }
+	//ComPtr<ID3D12GraphicsCommandList>* getCommandList() { return &commandList; }
+	ComPtr<ID3D12CommandQueue>* getCommandQueue() { return &commandQueue; }
 private:
 	static const UINT FrameCount = 2; //N buffers
 	
