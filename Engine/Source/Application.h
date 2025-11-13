@@ -7,7 +7,8 @@
 #include <chrono>
 
 class Module;
-class ModuleD3D12; //en vez d hacer include
+class ModuleD3D12; 
+class ModuleEditor;
 
 class Application
 {
@@ -17,16 +18,20 @@ public:
 	~Application();
 
 	bool         init();
+	bool         postInit();
 	void         update();
 	bool         cleanUp();
 
     ModuleD3D12*                getD3D12() { return d3d12; }
+    ModuleEditor*               getEditor() { return editor; }
     float                       getFPS() const { return 1000.0f * float(MAX_FPS_TICKS) / tickSum; }
     float                       getAvgElapsedMs() const { return tickSum / float(MAX_FPS_TICKS); }
     uint64_t                    getElapsedMilis() const { return elapsedMilis; }
 
     bool                        isPaused() const { return paused; }
     bool                        setPaused(bool p) { paused = p; return paused; }
+
+    void AddLog(const char* msg);
 
 private:
     enum { MAX_FPS_TICKS = 30 };
@@ -35,6 +40,7 @@ private:
     std::vector<Module*> modules;
 
     ModuleD3D12* d3d12 = nullptr;
+    ModuleEditor* editor = nullptr;
 
     uint64_t  lastMilis = 0;
     TickList  tickList;

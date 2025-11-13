@@ -163,7 +163,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="3rdParty\imgui-1.89.8\backends\imgui_impl_win32.h" />
     <ClInclude Include="3rdParty\imgui-docking\backends\imgui_impl_dx12.h" />
     <ClInclude Include="3rdParty\imgui-docking\backends\imgui_impl_win32.h" />
     <ClInclude Include="3rdParty\imgui-docking\imgui.h" />
@@ -180,6 +179,7 @@
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="Module.h" />
     <ClInclude Include="ModuleD3D12.h" />
+    <ClInclude Include="ModuleEditor.h" />
     <ClInclude Include="ModuleInput.h" />
     <ClInclude Include="ModuleResources.h" />
     <ClInclude Include="Mouse.h" />
@@ -271,6 +271,7 @@
     <ClCompile Include="ImGuiPass.cpp" />
     <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="ModuleD3D12.cpp" />
+    <ClCompile Include="ModuleEditor.cpp" />
     <ClCompile Include="ModuleInput.cpp" />
     <ClCompile Include="ModuleResources.cpp" />
     <ClCompile Include="Mouse.cpp" />

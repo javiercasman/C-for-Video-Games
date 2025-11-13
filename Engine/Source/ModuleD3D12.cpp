@@ -2,7 +2,6 @@
 #include "ModuleD3D12.h"
 #include "Application.h"
 
-
 ModuleD3D12::ModuleD3D12(HWND wnd) : hWnd(wnd), fenceValues{}, rtvDescriptorIncrementSize(0), frameIndex(0), fenceEvent(nullptr), currentFenceValue(0)
 {
 }
@@ -102,7 +101,7 @@ bool ModuleD3D12::init()
 	// Wait for the command list to execute; we are reusing the same command 
 		// list in our main loop but for now, we just want to wait for setup to 
 		// complete before continuing.
-	//WaitForGpu();
+	//WaitForGPU();
 
     return true; //cambiar, podemos poner true como predeterminado pero mejor usar SUCCEEDED(hr) para ver si ha salido bien o no
 }
@@ -131,10 +130,21 @@ void ModuleD3D12::preRender()
 		Fence->SetEventOnCompletion(fenceValues[frameIndex], fenceEvent);
 		WaitForSingleObject(fenceEvent, INFINITE);
 	}
+	//Llamar a Reset() en el CommandAllocator y en la CommandList.
+	commandAllocators[frameIndex]->Reset();
+	commandList->Reset(commandAllocators[frameIndex].Get(), nullptr);
 }
 
 void ModuleD3D12::postRender()
 {
+	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	commandList->ResourceBarrier(1, &barrier);
+	commandList->Close();
+
+	//no sabemos cuantas command lists hay, asi que:
+	ID3D12CommandList* ppCommandLists[] = { commandList.Get() };
+	commandQueue->ExecuteCommandLists(std::size(ppCommandLists), ppCommandLists);
+
 	swapChain->Present(1, 0);
 	
 	currentFenceValue = fenceValues[frameIndex] + 1;
@@ -147,10 +157,6 @@ void ModuleD3D12::postRender()
 
 void ModuleD3D12::render()
 {
-	//Llamar a Reset() en el CommandAllocator y en la CommandList.
-	commandAllocators[frameIndex]->Reset();
-	commandList->Reset(commandAllocators[frameIndex].Get(), nullptr);
-
 	//Transicionar el back buffer desde PRESENT --> RENDER_TARGET con un ResourceBarrier.
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	commandList->ResourceBarrier(1, &barrier);
@@ -161,19 +167,7 @@ void ModuleD3D12::render()
 
 	//const float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 	float colorRed[] = { 1.0f, 0.0f, 0.0f, 1.0f };
-	float colorBlue[] = { 0.0f, 0.0f, 1.0f, 1.0f };
-	float* color;
-	if (frameIndex != 0) color = colorRed;
-	else color = colorBlue;
-	commandList->ClearRenderTargetView(rtvHandle, color, 0, nullptr);
-
-	barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-	commandList->ResourceBarrier(1, &barrier);
-	commandList->Close();
-
-	//no sabemos cuantas command lists hay, asi que:
-	ID3D12CommandList* ppCommandLists[] = { commandList.Get() };
-	commandQueue->ExecuteCommandLists(std::size(ppCommandLists), ppCommandLists);
+	commandList->ClearRenderTargetView(rtvHandle, colorRed, 0, nullptr);
 }
 
 void ModuleD3D12::GetWindowSize(UINT &width, UINT &height) 

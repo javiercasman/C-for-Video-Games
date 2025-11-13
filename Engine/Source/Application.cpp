@@ -3,6 +3,7 @@
 #include "ModuleInput.h"
 #include "ModuleD3D12.h"
 #include "ModuleResources.h"
+#include "ModuleEditor.h"
 
 
 Application::Application(int argc, wchar_t** argv, void* hWnd)
@@ -10,7 +11,8 @@ Application::Application(int argc, wchar_t** argv, void* hWnd)
     //aqui añadimos los modulos a modules. tendremos que hacerlo con ModuleD3D12
     modules.push_back(new ModuleInput((HWND)hWnd));
     modules.push_back(d3d12 = new ModuleD3D12((HWND)hWnd));
-    modules.push_back(new ModuleResources(d3d12));
+    modules.push_back(editor = new ModuleEditor((HWND)hWnd));
+   // modules.push_back(new ModuleResources(d3d12));
 }
 
 Application::~Application()
@@ -33,6 +35,18 @@ bool Application::init()
     lastMilis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 	return ret;
+}
+
+bool Application::postInit()
+{
+    bool ret = true;
+
+    for (auto it = modules.begin(); it != modules.end() && ret; ++it)
+        ret = (*it)->postInit();
+
+    lastMilis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+    return ret;
 }
 
 void Application::update()
@@ -73,4 +87,9 @@ bool Application::cleanUp()
 		ret = (*it)->cleanUp();
 
 	return ret;
+}
+
+void Application::AddLog(const char* msg) 
+{ 
+    if (editor) editor->AddLog(msg); 
 }

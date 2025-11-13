@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Module.h"
+#include "ImGuiPass.h"
 #include <dxgi1_6.h>
 
 class ModuleD3D12 : public Module
@@ -17,9 +18,9 @@ public:
 	bool CleanUp();
 	void GetWindowSize(UINT& width, UINT& height);
 
-	ComPtr<ID3D12Device5>* getDevice() { return &device; }
-	//ComPtr<ID3D12GraphicsCommandList>* getCommandList() { return &commandList; }
-	ComPtr<ID3D12CommandQueue>* getCommandQueue() { return &commandQueue; }
+	ComPtr<ID3D12Device5> getDevice() { return device; }
+	ComPtr<ID3D12GraphicsCommandList> getCommandList() { return commandList; }
+	ComPtr<ID3D12CommandQueue> getCommandQueue() { return commandQueue; }
 private:
 	static const UINT FrameCount = 2; //N buffers
 	
