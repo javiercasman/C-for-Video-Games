@@ -22,6 +22,10 @@
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="SimpleMath.cpp" />
     <ClCompile Include="ModuleEditor.cpp" />
+    <ClCompile Include="ModuleExercise2.cpp" />
+    <ClCompile Include="ModuleExercise3.cpp" />
+    <ClCompile Include="ModuleCamera.cpp" />
+    <ClCompile Include="ModuleShaderDescriptors.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="3rdParty\imgui-docking\backends\imgui_impl_dx12.h" />
@@ -49,6 +53,10 @@
     <ClInclude Include="SimpleMath.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ModuleEditor.h" />
+    <ClInclude Include="ModuleExercise2.h" />
+    <ClInclude Include="ModuleExercise3.h" />
+    <ClInclude Include="ModuleCamera.h" />
+    <ClInclude Include="ModuleShaderDescriptors.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Engine.rc" />
@@ -59,5 +67,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleMath.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Exercise2VS.hlsl" />
+    <FxCompile Include="Exercise2PS.hlsl" />
+    <FxCompile Include="Exercise3VS.hlsl" />
+    <FxCompile Include="Exercise3PS.hlsl" />
   </ItemGroup>
 </Project>

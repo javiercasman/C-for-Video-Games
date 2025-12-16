@@ -1,9 +1,7 @@
 #pragma once
 
-#include "Module.h"
-#include "ModuleD3D12.h"
 #include "ImGuiPass.h"
-#include "Application.h"
+#include "Module.h"
 
 class ModuleEditor : public Module
 {
@@ -16,16 +14,23 @@ public:
 	void update();
 	//void postRender();
 	bool cleanUp();
-	void AddLog(const char* msg);
+	void addLog(const char* msg);
+	void addFramerate();
 private:
 	HWND hWnd = NULL;
 	ModuleD3D12* d3d12 = nullptr;
 	ImGuiPass* imGui = nullptr;
+	std::vector<float> fps_log;
+	std::vector<float> ms_log;
 
-	ComPtr<ID3D12Device2> device;
-	ComPtr<ID3D12GraphicsCommandList> commandList;
-	ComPtr<ID3D12CommandAllocator> commandAllocator;
-	ComPtr<ID3D12CommandQueue> commandQueue;
+	float fov;
+	float nearZ;
+	float farZ;
+
+	ID3D12Device2* device;
+	ID3D12GraphicsCommandList* commandList;
+	ID3D12CommandAllocator* commandAllocator; //?
+	ID3D12CommandQueue* commandQueue;
 
 	std::vector<std::string> logBuffer;
 };

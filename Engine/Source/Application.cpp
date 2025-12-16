@@ -4,6 +4,9 @@
 #include "ModuleD3D12.h"
 #include "ModuleResources.h"
 #include "ModuleEditor.h"
+#include "ModuleExercise2.h"
+#include "ModuleExercise3.h"
+#include "ModuleCamera.h"
 
 
 Application::Application(int argc, wchar_t** argv, void* hWnd)
@@ -11,8 +14,11 @@ Application::Application(int argc, wchar_t** argv, void* hWnd)
     //aqui añadimos los modulos a modules. tendremos que hacerlo con ModuleD3D12
     modules.push_back(new ModuleInput((HWND)hWnd));
     modules.push_back(d3d12 = new ModuleD3D12((HWND)hWnd));
-    modules.push_back(editor = new ModuleEditor((HWND)hWnd));
-   // modules.push_back(new ModuleResources(d3d12));
+    modules.push_back(camera = new ModuleCamera());
+    modules.push_back(resources = new ModuleResources(d3d12));
+    //modules.push_back(new ModuleExercise2(d3d12));
+    modules.push_back(new ModuleExercise3(d3d12, camera));
+    modules.push_back(editor = new ModuleEditor((HWND)hWnd)); //ModuleEditor no funciona por si solo. tiene que ir despues de un modulo q renderize (los ejercicios)
 }
 
 Application::~Application()
@@ -41,7 +47,7 @@ bool Application::postInit()
 {
     bool ret = true;
 
-    for (auto it = modules.begin(); it != modules.end() && ret; ++it)
+   for (auto it = modules.begin(); it != modules.end() && ret; ++it)
         ret = (*it)->postInit();
 
     lastMilis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -89,7 +95,7 @@ bool Application::cleanUp()
 	return ret;
 }
 
-void Application::AddLog(const char* msg) 
+void Application::addLog(const char* msg) 
 { 
-    if (editor) editor->AddLog(msg); 
+    if (editor) editor->addLog(msg); 
 }
