@@ -91,7 +91,7 @@ ComPtr<ID3D12Resource> ModuleResources::createDepthStencil(size_t width, size_t 
 	return texture;
 }
 
-ComPtr<ID3D12Resource> ModuleResources::createTextureFromFile(const std::filesystem::path& path, bool defaultSRGB)
+ComPtr<ID3D12Resource> ModuleResources::createTextureFromFile(const std::filesystem::path& path)
 {
 	DirectX::ScratchImage image;
 	const wchar_t* filePath = path.c_str();
@@ -99,13 +99,13 @@ ComPtr<ID3D12Resource> ModuleResources::createTextureFromFile(const std::filesys
 	{
 		if (FAILED(LoadFromTGAFile(filePath, nullptr, image)))
 		{
-			LoadFromWICFile(filePath, WIC_FLAGS_NONE, nullptr, image);
+			if(FAILED(LoadFromWICFile(filePath, WIC_FLAGS_NONE, nullptr, image))) return nullptr;
 		}
 	}
 
-	DirectX::TexMetadata metaData = image.GetMetadata();
+	const DirectX::TexMetadata metaData = image.GetMetadata();
 
-	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Tex2D(metaData.format, UINT64(metaData.width), UINT(metaData.height), UINT16(metaData.arraySize), UINT16(metaData.mipLevels));
+	CD3DX12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Tex2D(metaData.format, UINT64(metaData.width), UINT(metaData.height), UINT16(metaData.arraySize), UINT16(metaData.mipLevels));
 
 	CD3DX12_HEAP_PROPERTIES heap(D3D12_HEAP_TYPE_DEFAULT);
 	ComPtr<ID3D12Resource> texture;
@@ -116,7 +116,7 @@ ComPtr<ID3D12Resource> ModuleResources::createTextureFromFile(const std::filesys
 	ComPtr<ID3D12Resource> staging;
 
 	CD3DX12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	CD3DX12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size);
+	desc = CD3DX12_RESOURCE_DESC::Buffer(size);
 	device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&staging));
 
 	std::vector<D3D12_SUBRESOURCE_DATA> subData;

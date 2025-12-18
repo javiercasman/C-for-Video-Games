@@ -6,7 +6,10 @@
 #include "ModuleEditor.h"
 #include "ModuleExercise2.h"
 #include "ModuleExercise3.h"
+#include "ModuleExercise4.h"
 #include "ModuleCamera.h"
+#include "ModuleShaderDescriptors.h"
+#include "ModuleSampler.h"
 
 
 Application::Application(int argc, wchar_t** argv, void* hWnd)
@@ -14,11 +17,14 @@ Application::Application(int argc, wchar_t** argv, void* hWnd)
     //aqui añadimos los modulos a modules. tendremos que hacerlo con ModuleD3D12
     modules.push_back(new ModuleInput((HWND)hWnd));
     modules.push_back(d3d12 = new ModuleD3D12((HWND)hWnd));
-    modules.push_back(camera = new ModuleCamera());
+    modules.push_back(camera = new ModuleCamera(d3d12));
     modules.push_back(resources = new ModuleResources(d3d12));
+    modules.push_back(shaderDescriptors = new ModuleShaderDescriptors(d3d12));
+    modules.push_back(sampler = new ModuleSampler(d3d12));
     //modules.push_back(new ModuleExercise2(d3d12));
-    modules.push_back(new ModuleExercise3(d3d12, camera));
-    modules.push_back(editor = new ModuleEditor((HWND)hWnd)); //ModuleEditor no funciona por si solo. tiene que ir despues de un modulo q renderize (los ejercicios)
+    //modules.push_back(new ModuleExercise3(d3d12, camera));
+	modules.push_back(exercise4 = new ModuleExercise4(d3d12, camera));
+    modules.push_back(editor = new ModuleEditor((HWND)hWnd, d3d12)); //ModuleEditor no funciona por si solo. tiene que ir despues de un modulo q renderize (los ejercicios)
 }
 
 Application::~Application()

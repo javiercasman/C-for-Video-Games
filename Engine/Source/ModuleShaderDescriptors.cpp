@@ -4,8 +4,8 @@
 #include "Application.h"
 #include "ModuleD3D12.h"
 
-ModuleShaderDescriptors::ModuleShaderDescriptors()
-{	
+ModuleShaderDescriptors::ModuleShaderDescriptors(ModuleD3D12* d3D12) : d3d12(d3D12)
+{
 }
 
 bool ModuleShaderDescriptors::init()
@@ -25,11 +25,12 @@ bool ModuleShaderDescriptors::init()
 
 	cpuStart = srvHeap->GetCPUDescriptorHandleForHeapStart();
 	gpuStart = srvHeap->GetGPUDescriptorHandleForHeapStart();
+
+	return true;
 }
 
-void ModuleShaderDescriptors::createSRV(ID3D12Resource* texture)
+void ModuleShaderDescriptors::createSRV(ID3D12Resource* texture, UINT srvIndex)
 {
-	UINT srvIndex = allocDescriptor();
 	device->CreateShaderResourceView(texture, nullptr, getCPUHandle(srvIndex));
 }
 

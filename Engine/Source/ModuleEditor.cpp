@@ -4,9 +4,12 @@
 #include "ModuleD3D12.h"
 #include "ModuleCamera.h"
 #include "Application.h"
+#include "ImGuiPass.h"
+#include "ModuleSampler.h"
+#include "ModuleExercise4.h"
 
 
-ModuleEditor::ModuleEditor(HWND wnd) : hWnd(wnd)
+ModuleEditor::ModuleEditor(HWND wnd, ModuleD3D12* d3D12) : hWnd(wnd), d3d12(d3D12)
 {
 }
 
@@ -18,7 +21,6 @@ bool ModuleEditor::cleanUp()
 
 bool ModuleEditor::postInit()
 {
-	d3d12 = app->getD3D12();
 	if (FAILED(d3d12->getDevice()->QueryInterface(&device))) return false;
 	////if (FAILED(swapChain1.As(&swapChain))) return false;
 	D3D12_CPU_DESCRIPTOR_HANDLE cpuTextHandle = { 0 };
@@ -33,6 +35,8 @@ bool ModuleEditor::postInit()
 
 	fov = app->getCamera()->getFOV();
 	nearZ = app->getCamera()->getNear(); farZ = app->getCamera()->getFar();
+
+	samplerType = int(ModuleSampler::LINEAR_WRAP);
 
 	return true;
 }
@@ -72,6 +76,9 @@ void ModuleEditor::render()
 
 	if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) ImGui::SetScrollHereY(1.0f);
 
+	ImGui::End();
+
+	ImGui::Begin("Performance");
 	addFramerate();
 	char title[25];
 	sprintf_s(title, 25, "Framerate %.1f", fps_log[fps_log.size() - 1]);
@@ -81,11 +88,52 @@ void ModuleEditor::render()
 
 	ImGui::End();
 
-	ImGui::Begin("Params");
+	ImGui::Begin("Camera parameters");
 
-	ImGui::SliderFloat("FOV", &fov, 0.7f, 1.2f);
-	ImGui::SliderFloat("Near Z", &nearZ, 0.1f, 1000.f);
-	ImGui::SliderFloat("Far Z", &farZ, 0.1f, 1000.f); //nearz no puede ser igual a farz (crashea)
+	if (ImGui::DragFloat("FOV", &fov, 0.01f, 0.2f, 2.5f))
+	{
+		app->getCamera()->setFOV(fov);
+	}
+
+	if (ImGui::DragFloat("Near Z", &nearZ, 0.01f, 0.01f, farZ - 0.01f))
+	{
+		app->getCamera()->setNear(nearZ);
+	}
+
+	if (ImGui::DragFloat("Far Z", &farZ, 1.0f, nearZ + 0.01f, 100.0f))
+	{
+		app->getCamera()->setFar(farZ);
+	}
+
+	ImGui::End();
+
+	ImGui::Begin("Sampler");
+
+	static const char* samplerNames[] =
+	{
+		"Linear / Wrap",
+		"Point / Wrap",
+		"Linear / Clamp",
+		"Point / Clamp"
+	};
+
+	if(ImGui::Combo("Type", &samplerType, samplerNames, ModuleSampler::COUNT))
+	{
+		app->getCurrentExercise()->setSampler(ModuleSampler::Type(samplerType));
+	}
+
+	ImGui::End();
+
+	ImGui::Begin("Debug");
+
+	if(ImGui::Checkbox("Show Axis", &axisOn)) 
+	{
+		app->getCurrentExercise()->setShowAxis(axisOn);
+	}
+	if(ImGui::Checkbox("Show Grid", &gridOn)) 
+	{
+		app->getCurrentExercise()->setShowGrid(gridOn);
+	}
 
 	ImGui::End();
 
@@ -94,7 +142,7 @@ void ModuleEditor::render()
 
 void ModuleEditor::update()
 {
-	if (fov != app->getCamera()->getFOV()) 
+	/*if (fov != app->getCamera()->getFOV()) 
 	{
 		app->getCamera()->setFOV(fov);
 	}
@@ -106,7 +154,10 @@ void ModuleEditor::update()
 	{
 		app->getCamera()->setFar(farZ);
 	}
-
+	if(ModuleSampler::Type(samplerType) != app->getCurrentExercise()->getSamplerType())
+	{
+		app->getCurrentExercise()->setSampler(ModuleSampler::Type(samplerType));
+	}*/
 }
 
 void ModuleEditor::addLog(const char* msg)

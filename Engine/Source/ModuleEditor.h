@@ -1,12 +1,13 @@
 #pragma once
 
-#include "ImGuiPass.h"
 #include "Module.h"
+
+class ImGuiPass;
 
 class ModuleEditor : public Module
 {
 public:
-	ModuleEditor(HWND wnd);
+	ModuleEditor(HWND wnd, ModuleD3D12* d3D12);
 	//bool init();como este modulo depende de otros (moduled3d12), llamaremos a postinit()
 	bool postInit();
 	void preRender();
@@ -14,6 +15,7 @@ public:
 	void update();
 	//void postRender();
 	bool cleanUp();
+
 	void addLog(const char* msg);
 	void addFramerate();
 private:
@@ -26,6 +28,9 @@ private:
 	float fov;
 	float nearZ;
 	float farZ;
+	int samplerType;
+	bool gridOn = true;
+	bool axisOn = true;
 
 	ID3D12Device2* device;
 	ID3D12GraphicsCommandList* commandList;

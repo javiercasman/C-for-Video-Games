@@ -8,6 +8,7 @@ class ModuleD3D12 : public Module
 {
 public:
 	ModuleD3D12(HWND wnd);
+
 	bool init();
 	void update();
 	void preRender();
@@ -16,15 +17,15 @@ public:
 	bool resize();
 	void waitForGPU();
 	bool cleanUp();
-	void getWindowSize(UINT& width, UINT& height);
+	void getWindowSize(UINT& width, UINT& height) const;
 
-	ID3D12Device5* getDevice() { return device.Get(); }
-	ID3D12GraphicsCommandList* getCommandList() { return commandList.Get(); }
-	ID3D12CommandAllocator* getCommandAllocator() { return commandAllocators[frameIndex].Get(); }
-	ID3D12CommandQueue* getCommandQueue() { return commandQueue.Get(); }
-	ID3D12Resource* getCurrentBackBuffer() { return renderTargets[frameIndex].Get(); }
-	CD3DX12_CPU_DESCRIPTOR_HANDLE getCurrentRtv() { CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorIncrementSize); return rtvHandle; }
-	CD3DX12_CPU_DESCRIPTOR_HANDLE getDsv() { CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsvHeap->GetCPUDescriptorHandleForHeapStart()); return dsvHandle; }
+	ID3D12Device5* getDevice() const { return device.Get(); }
+	ID3D12GraphicsCommandList* getCommandList() const { return commandList.Get(); }
+	ID3D12CommandAllocator* getCommandAllocator() const { return commandAllocators[frameIndex].Get(); }
+	ID3D12CommandQueue* getCommandQueue() const { return commandQueue.Get(); }
+	ID3D12Resource* getCurrentBackBuffer() const { return renderTargets[frameIndex].Get(); }
+	CD3DX12_CPU_DESCRIPTOR_HANDLE getCurrentRtv() const { CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorIncrementSize); return rtvHandle; }
+	CD3DX12_CPU_DESCRIPTOR_HANDLE getDsv() const { CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsvHeap->GetCPUDescriptorHandleForHeapStart()); return dsvHandle; }
 private:
 	static const UINT FrameCount = 2; //N buffers
 	

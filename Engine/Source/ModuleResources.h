@@ -12,7 +12,7 @@ public:
 	ComPtr<ID3D12Resource> createUploadBuffer(const void* data, size_t size, const char* name);
 	ComPtr<ID3D12Resource> createDefaultBuffer(const void* data, size_t size, const char* name);
 	ComPtr<ID3D12Resource> createDepthStencil(size_t width, size_t height, const char* name);
-	ComPtr<ID3D12Resource> createTextureFromFile(const std::filesystem::path& path, bool defaultSRGB);
+	ComPtr<ID3D12Resource> createTextureFromFile(const std::filesystem::path& path);
 private:
 	ModuleD3D12* d3d12 = nullptr;
 	ID3D12Device5* device;

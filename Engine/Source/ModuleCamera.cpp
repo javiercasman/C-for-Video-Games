@@ -10,11 +10,11 @@
 
 #define MOVE_SPEED 1.5f
 #define SENSITIVITY 2.0f / 1000
-#define ZOOM_SENS 5.0f
+#define ZOOM_SENS 1.0f
 #define FRAME_DIST_1 10.f
 #define FRAME_DIST_2 5.f
 
-ModuleCamera::ModuleCamera()
+ModuleCamera::ModuleCamera(ModuleD3D12* d3D12) : d3d12(d3D12)
 {
 }
 
@@ -30,7 +30,7 @@ bool ModuleCamera::init()
 
 	fovh = XM_PIDIV4; // PI/4
 	aspect = float(windowWidth) / (windowHeight);
-	nearZ = 0.1f; farZ = 1000.0f;
+	nearZ = 0.1f; farZ = 100.0f;
 	proj = Matrix::CreatePerspectiveFieldOfView(fovh, aspect, nearZ, farZ);
 
 	forward = target - eye;
@@ -58,6 +58,8 @@ void ModuleCamera::update()
 	Vector3 translate = Vector3::Zero;
 	//Vector2 rotate = Vector2::Zero;
 
+	float deltaWheel = lastWheel - mouseState.scrollWheelValue;
+
 	//2 formas: quaternions o lookat. lo voy a hacer con el lookat de momento
 	float fx = cos(pitch) * sin(yaw);
 	float fy = sin(pitch);
@@ -72,7 +74,7 @@ void ModuleCamera::update()
 	camUp = right.Cross(forward);
 	camUp.Normalize();
 
-	if (mouseState.rightButton && !keyboardState.LeftAlt)
+	if (mouseState.rightButton /* && !keyboardState.LeftAlt*/)
 	{
 		//rotar camara
 		yaw += float(lastX - mouseState.x) * SENSITIVITY;
@@ -107,28 +109,40 @@ void ModuleCamera::update()
 
 			eye = target - forward * dist;
 		}
-		else //se le ha olvidado el panning en el assignment. lo metemos o no?
+		/*else //El panning no hace falta en el assignment, descomentar para añadirlo
 		{
 			eye += right * float(mouseState.x - lastX) * SENSITIVITY;
 			target += right * float(mouseState.x - lastX) * SENSITIVITY;
 			eye += camUp * float(lastY - mouseState.y) * SENSITIVITY;
 			target += camUp * float(lastY - mouseState.y) * SENSITIVITY;
-		}
+		}*/
 	}
-	//falta zoom
-	if (keyboardState.LeftAlt)//CAMBIAR A MOUSE WHEEL, en nuestro caso añadir, prefiero tener ambas opciones
+	
+	//if (keyboardState.LeftAlt)//CAMBIAR A MOUSE WHEEL para assignment, en nuestro caso añadir, prefiero tener ambas opciones
+	//{
+	//	if (mouseState.rightButton)
+	//	{
+	//		Vector3 vecDist = target - eye;
+	//		float dist = vecDist.Length();
+	//		forward = vecDist / dist;
+	//		float zoomDelta = float(lastY - mouseState.y) * ZOOM_SENS * elapsedSec;
+	//		if (zoomDelta != 0) {
+	//			float newDist = dist - zoomDelta;
+	//			newDist = std::clamp(newDist, 1.0f, 100.f);
+	//			eye = target - forward * newDist;
+	//		}
+	//	}
+	//}
+	if(deltaWheel != 0)
 	{
-		if (mouseState.rightButton)
-		{
-			Vector3 vecDist = target - eye;
-			float dist = vecDist.Length();
-			forward = vecDist / dist;
-			float zoomDelta = float(lastY - mouseState.y) * ZOOM_SENS * elapsedSec;
-			if (zoomDelta != 0) {
-				float newDist = dist - zoomDelta;
-				newDist = std::clamp(newDist, 1.0f, 100.f);
-				eye = target - forward * newDist; // no va
-			}
+		Vector3 vecDist = target - eye;
+		float dist = vecDist.Length();
+		forward = vecDist / dist;
+		float zoomDelta = deltaWheel * ZOOM_SENS * elapsedSec;
+		if (zoomDelta != 0) {
+			float newDist = dist + zoomDelta;
+			newDist = std::clamp(newDist, 1.0f, 100.f);
+			eye = target - forward * newDist;
 		}
 	}
 
@@ -156,21 +170,22 @@ void ModuleCamera::update()
 
 	lastX = mouseState.x;
 	lastY = mouseState.y;
+	lastWheel = mouseState.scrollWheelValue;
 }
 
-void ModuleCamera::setFOV(float newFOV)
+void ModuleCamera::setFOV(const float newFOV)
 {
 	fovh = newFOV;
 	proj = Matrix::CreatePerspectiveFieldOfView(fovh, aspect, nearZ, farZ);
 }
 
-void ModuleCamera::setNear(float newNear)
+void ModuleCamera::setNear(const float newNear)
 {
 	nearZ = newNear;
 	proj = Matrix::CreatePerspectiveFieldOfView(fovh, aspect, nearZ, farZ);
 }
 
-void ModuleCamera::setFar(float newFar)
+void ModuleCamera::setFar(const float newFar)
 {
 	farZ = newFar;
 	proj = Matrix::CreatePerspectiveFieldOfView(fovh, aspect, nearZ, farZ);
@@ -183,6 +198,7 @@ void ModuleCamera::setAspectRatio()
 	proj = Matrix::CreatePerspectiveFieldOfView(fovh, aspect, 0.1f, 1000.0f);
 }
 
+/*
 void ModuleCamera::setPlaneDistance()
 {
 }
@@ -194,3 +210,4 @@ void ModuleCamera::setPosition()
 void ModuleCamera::setOrientation()
 {
 }
+*/

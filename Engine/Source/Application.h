@@ -11,6 +11,9 @@ class ModuleD3D12;
 class ModuleEditor;
 class ModuleResources;
 class ModuleCamera;
+class ModuleShaderDescriptors;
+class ModuleSampler;
+class ModuleExercise4;
 
 class Application
 {
@@ -28,6 +31,10 @@ public:
     ModuleEditor*               getEditor() { return editor; }
     ModuleResources*            getResources() { return resources; }
     ModuleCamera*               getCamera() { return camera; }
+	ModuleShaderDescriptors*    getShaderDescriptors() { return shaderDescriptors; }
+	ModuleSampler*              getSampler() { return sampler; }
+    
+    ModuleExercise4*            getCurrentExercise() { return exercise4; }
 
     float                       getFPS() const { return 1000.0f * float(MAX_FPS_TICKS) / tickSum; }
     float                       getAvgElapsedMs() const { return tickSum / float(MAX_FPS_TICKS); }
@@ -48,6 +55,9 @@ private:
     ModuleEditor* editor = nullptr;
     ModuleResources* resources = nullptr;
     ModuleCamera* camera = nullptr;
+	ModuleShaderDescriptors* shaderDescriptors = nullptr;
+	ModuleSampler* sampler = nullptr;
+	ModuleExercise4* exercise4 = nullptr;
 
     uint64_t  lastMilis = 0;
     TickList  tickList;

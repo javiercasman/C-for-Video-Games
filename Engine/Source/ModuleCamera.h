@@ -5,23 +5,24 @@
 class ModuleCamera : public Module
 {
 public:
-	ModuleCamera();
+	ModuleCamera(ModuleD3D12* d3D12);
+
 	bool init();
 	void update();
 
-	void setFOV(float newFOV); //Set the horizontal FOV keeping the aspect ratio
-	void setNear(float newNear); //Set the horizontal FOV keeping the aspect ratio
-	void setFar(float newFar); //Set the horizontal FOV keeping the aspect ratio
+	void setFOV(const float newFOV); //Set the horizontal FOV keeping the aspect ratio
+	void setNear(const float newNear); //Set the horizontal FOV keeping the aspect ratio
+	void setFar(const float newFar); //Set the horizontal FOV keeping the aspect ratio
 	void setAspectRatio(); //Change the vertical FOV to meet the new aspect ratio
-	void setPlaneDistance();
-	void setPosition();
-	void setOrientation();
+	//void setPlaneDistance();
+	//void setPosition();
+	//void setOrientation();
 
-	Matrix getViewMatrix() { return view; }
-	Matrix getProjectionMatrix() { return proj; }
-	float getFOV() { return fovh; }
-	float getNear() { return nearZ; }
-	float getFar() { return farZ; }
+	Matrix getViewMatrix() const { return view; }
+	Matrix getProjectionMatrix() const { return proj; }
+	float getFOV() const { return fovh; }
+	float getNear() const { return nearZ; }
+	float getFar() const { return farZ; }
 
 private:
 	ModuleD3D12* d3d12;
@@ -41,7 +42,7 @@ private:
 	bool frameFar;
 	bool fPressed;
 
-	int lastX, lastY;
+	int lastX, lastY, lastWheel;
 
 	Vector3 eye;
 	Vector3 target;

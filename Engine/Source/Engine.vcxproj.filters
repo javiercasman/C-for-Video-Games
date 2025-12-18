@@ -26,6 +26,8 @@
     <ClCompile Include="ModuleExercise3.cpp" />
     <ClCompile Include="ModuleCamera.cpp" />
     <ClCompile Include="ModuleShaderDescriptors.cpp" />
+    <ClCompile Include="ModuleExercise4.cpp" />
+    <ClCompile Include="ModuleSampler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="3rdParty\imgui-docking\backends\imgui_impl_dx12.h" />
@@ -57,6 +59,8 @@
     <ClInclude Include="ModuleExercise3.h" />
     <ClInclude Include="ModuleCamera.h" />
     <ClInclude Include="ModuleShaderDescriptors.h" />
+    <ClInclude Include="ModuleExercise4.h" />
+    <ClInclude Include="ModuleSampler.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Engine.rc" />
@@ -73,5 +77,7 @@
     <FxCompile Include="Exercise2PS.hlsl" />
     <FxCompile Include="Exercise3VS.hlsl" />
     <FxCompile Include="Exercise3PS.hlsl" />
+    <FxCompile Include="Exercise4PS.hlsl" />
+    <FxCompile Include="Exercise4VS.hlsl" />
   </ItemGroup>
 </Project>

@@ -99,7 +99,7 @@ void ModuleD3D12::render()
 	*/
 }
 
-void ModuleD3D12::getWindowSize(UINT &width, UINT &height) 
+void ModuleD3D12::getWindowSize(UINT &width, UINT &height) const
 {
 	RECT rect;
 	GetClientRect(hWnd, &rect);

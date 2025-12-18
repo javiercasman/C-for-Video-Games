@@ -5,15 +5,17 @@
 class ModuleShaderDescriptors : public Module
 {
 public:
-	ModuleShaderDescriptors();
+	ModuleShaderDescriptors(ModuleD3D12* d3D12);
 
 	bool init();
-	void createSRV(ID3D12Resource* texture);
+	void createSRV(ID3D12Resource* texture, UINT srvIndex);
 	UINT allocDescriptor();
 	void reset();
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE getCPUHandle(UINT index) const { return CD3DX12_CPU_DESCRIPTOR_HANDLE(cpuStart, index, srvDescriptorIncrementSize); };
 	CD3DX12_GPU_DESCRIPTOR_HANDLE getGPUHandle(UINT index) const { return CD3DX12_GPU_DESCRIPTOR_HANDLE(gpuStart, index, srvDescriptorIncrementSize); };
+
+	ID3D12DescriptorHeap* getHeap() const { return srvHeap.Get(); }
 
 private:
 	//enum { NUM_DESCRIPTORS = 4096, DESCRIPTORS_PER_TABLE = 8 };
