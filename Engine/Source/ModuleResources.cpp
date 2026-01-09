@@ -35,10 +35,13 @@ ComPtr<ID3D12Resource> ModuleResources::createUploadBuffer(const void* data, siz
 	BYTE* pData = nullptr;
 	CD3DX12_RANGE readRange(0, 0); // We won't read from it, so range is (0,0)
 	buffer->Map(0, &readRange, reinterpret_cast<void**>(&pData));
-	// Copy our application data into the buffer
-	memcpy(pData, data, size);
-	// Unmap the buffer (invalidate the pointer)
-	buffer->Unmap(0, nullptr);
+	if (data != nullptr) //si data == nullptr, solo queremos crear el buffer y lo tenemos mapeado permanentemente (ring buffer)
+	{
+		// Copy our application data into the buffer
+		memcpy(pData, data, size);
+		// Unmap the buffer (invalidate the pointer)
+		buffer->Unmap(0, nullptr);
+	}
 
 	return buffer;
 }

@@ -1,5 +1,5 @@
 #include "Globals.h"
-#include "ModuleExercise4.h"
+#include "ModuleExercise5.h"
 #include "ModuleResources.h"
 #include "ModuleD3D12.h"
 #include "ModuleCamera.h"
@@ -9,42 +9,35 @@
 #include "DebugDrawPass.h"
 #include "ModuleShaderDescriptors.h"
 #include "ModuleSampler.h"
+#include "Model.h"
 
-ModuleExercise4::ModuleExercise4(ModuleD3D12* d3D12, ModuleCamera* Camera) : d3d12(d3D12), camera(Camera)
+ModuleExercise5::ModuleExercise5(ModuleD3D12* d3D12, ModuleCamera* Camera) : d3d12(d3D12), camera(Camera)
 {
 }
 
-bool ModuleExercise4::init()
+bool ModuleExercise5::init()
 {
 	commandList = d3d12->getCommandList();
 	device = d3d12->getDevice();
 
-	bool ret = createVertexBuffer();
-	ret = ret && createRootSignature();
+	//bool ret = createVertexBuffer();
+	bool ret = createRootSignature();
 	ret = ret && createPSO();
+	ret = ret && loadModel();
 	if (ret)
 	{
-		ModuleResources* resources = app->getResources();
+		resources = app->getResources();
 
 		shaderDescriptors = app->getShaderDescriptors();
 		samplers = app->getSampler();
 
-		textureDog = resources->createTextureFromFile(std::wstring(L"../Game/Assets/Textures/dog.dds"));
-		ret = ret && textureDog;
-
-		if (ret)
-		{
-			dogDescriptorIndex = shaderDescriptors->allocDescriptor();
-			shaderDescriptors->createSRV(textureDog.Get(), dogDescriptorIndex);
-		}
-		
 		commandQueue = d3d12->getCommandQueue();
 		debugDraw = new DebugDrawPass(device, commandQueue);
 	}
 	return ret;
 }
 
-void ModuleExercise4::render()
+void ModuleExercise5::render()
 {
 	commandAllocator = d3d12->getCommandAllocator(); //a lo mejor esto no es necesario? si solo usamos el get, asi no hacemos un nuevo comptr y tal
 	commandList->Reset(commandAllocator, pso.Get());
@@ -57,20 +50,20 @@ void ModuleExercise4::render()
 	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = d3d12->getDsv();
 	commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
-	Matrix model = Matrix::Identity;
+	Matrix modelMatrix = model->getModelMatrix();
 	/*
 	Matrix view = Matrix::CreateLookAt(Vector3(0.0f, 10.0f, 10.0f), Vector3::Zero, Vector3::Up);
 	float aspect = float(windowWidth) / float(windowHeight);
 	float fov = XM_PIDIV4; // PI/4
 	Matrix proj = Matrix::CreatePerspectiveFieldOfView(fov, aspect, 0.1f, 1000.0f);
 	*/
-	Matrix view = camera->getViewMatrix();
-	Matrix proj = camera->getProjectionMatrix();
+	Matrix viewMatrix = camera->getViewMatrix();
+	Matrix projMatrix = camera->getProjectionMatrix();
 
 	//Set current Render Target by calling OMSetRenderTargets and clear it with ClearRenderTargetView
 	float clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
 	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr); //aaaaaamigo
+	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
 	//Set the Root Signature to use for rendering by calling SetGraphicsRootSignature
 	commandList->SetGraphicsRootSignature(rootSignature.Get());
@@ -86,24 +79,19 @@ void ModuleExercise4::render()
 	//Set the Primitive Topology by using the function IASetPrimitiveTopology to TRIANGLE_LIST
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	//Set the Vertex Buffer to use for rendering by calling IASetVertexBuffers
-	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
-
 	ID3D12DescriptorHeap* descriptorHeaps[] = { shaderDescriptors->getHeap(), samplers->getHeap() };
 	commandList->SetDescriptorHeaps(2, descriptorHeaps);
 
-	commandList->SetGraphicsRootDescriptorTable(1, shaderDescriptors->getGPUHandle(dogDescriptorIndex));
-	commandList->SetGraphicsRootDescriptorTable(2, samplers->getGPUHandle(samplerType)); //sampler de momento 0, haremos q con imgui pueda cambiar el sampler
+	commandList->SetGraphicsRootDescriptorTable(3, samplers->getGPUHandle(samplerType)); //sampler de momento 0, haremos q con imgui pueda cambiar el sampler
 
-	Matrix mvp = mvp = (model * view * proj).Transpose();
+	Matrix mvp = (modelMatrix * viewMatrix * projMatrix).Transpose();
 	commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / sizeof(UINT32), &mvp, 0);
 
-	//Add the command DrawInstanced with 6 vertices, 1 instance.
-	commandList->DrawInstanced(6, 1, 0, 0);
+	model->draw(commandList);
 
-	if(showGrid) dd::xzSquareGrid(-10.0f, 10.0f, 0.0f, 1.0f, dd::colors::LightGray); // Grid plane
-	if(showAxis) dd::axisTriad(ddConvert(Matrix::Identity), 0.1f, 1.0f); // XYZ axis
-	debugDraw->record(commandList, windowWidth, windowHeight, view, proj);
+	if (showGrid) dd::xzSquareGrid(-10.0f, 10.0f, 0.0f, 1.0f, dd::colors::LightGray); // Grid plane
+	if (showAxis) dd::axisTriad(ddConvert(Matrix::Identity), 0.1f, 1.0f); // XYZ axis
+	debugDraw->record(commandList, windowWidth, windowHeight, viewMatrix, projMatrix);
 
 	/*barrier = CD3DX12_RESOURCE_BARRIER::Transition(d3d12->getCurrentBackBuffer().Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	commandList->ResourceBarrier(1, &barrier);
@@ -114,17 +102,17 @@ void ModuleExercise4::render()
 	}*/
 }
 
-void ModuleExercise4::postRender()
+void ModuleExercise5::postRender()
 {
 
 }
 
-void ModuleExercise4::setSampler(ModuleSampler::Type type)
+void ModuleExercise5::setSampler(ModuleSampler::Type type)
 {
 	samplerType = type;
 }
 
-bool ModuleExercise4::createVertexBuffer()
+bool ModuleExercise5::createVertexBuffer()
 {
 	struct Vertex
 	{
@@ -140,26 +128,29 @@ bool ModuleExercise4::createVertexBuffer()
 		{ Vector3(1.0f, 1.0f, 0.0f), Vector2(1.2f, -0.2f) },
 		{ Vector3(1.0f, -1.0f, 0.0f), Vector2(1.2f, 1.2f) }
 	};
-	vertexBuffer = app->getResources()->createDefaultBuffer(vertices, sizeof(vertices), "Exercise4");
+	vertexBuffer = resources->createDefaultBuffer(vertices, sizeof(vertices), "Exercise5");
 	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
 	vertexBufferView.SizeInBytes = sizeof(vertices);
 	vertexBufferView.StrideInBytes = sizeof(Vertex);
 	return true;
 }
 
-bool ModuleExercise4::createRootSignature()
+bool ModuleExercise5::createRootSignature()
 {
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	CD3DX12_ROOT_PARAMETER rootParameters[3] = {};
-	CD3DX12_DESCRIPTOR_RANGE srvRange, sampRange;
 
-	srvRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-	sampRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
+	CD3DX12_ROOT_PARAMETER rootParameters[4] = {};
+	CD3DX12_DESCRIPTOR_RANGE tableRanges;
+	CD3DX12_DESCRIPTOR_RANGE sampRange;
+
+	tableRanges.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	sampRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 4, 0);
 
 	rootParameters[0].InitAsConstants((sizeof(Matrix) / sizeof(UINT32)), 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
-	rootParameters[1].InitAsDescriptorTable(1, &srvRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	rootParameters[2].InitAsDescriptorTable(1, &sampRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	rootSignatureDesc.Init(3, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	rootParameters[1].InitAsConstantBufferView(1, 0, D3D12_SHADER_VISIBILITY_PIXEL);
+	rootParameters[2].InitAsDescriptorTable(1, &tableRanges, D3D12_SHADER_VISIBILITY_PIXEL);
+	rootParameters[3].InitAsDescriptorTable(1, &sampRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	rootSignatureDesc.Init(4, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 	ComPtr<ID3DBlob> blob;
 	if (FAILED(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &blob, nullptr))) return false;
@@ -168,19 +159,19 @@ bool ModuleExercise4::createRootSignature()
 	return true;
 }
 
-bool ModuleExercise4::createPSO()
+bool ModuleExercise5::createPSO()
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 	psoDesc.pRootSignature = rootSignature.Get();
 	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 
-	auto dataVS = DX::ReadData(L"Exercise4VS.cso");
-	auto dataPS = DX::ReadData(L"Exercise4PS.cso");
+	auto dataVS = DX::ReadData(L"Exercise5VS.cso");
+	auto dataPS = DX::ReadData(L"Exercise5PS.cso");
 	psoDesc.VS = { dataVS.data(), dataVS.size() };
 	psoDesc.PS = { dataPS.data(), dataPS.size() };
 
-	D3D12_INPUT_ELEMENT_DESC inputLayout[] = 
+	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
 	{
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
@@ -194,9 +185,20 @@ bool ModuleExercise4::createPSO()
 	psoDesc.SampleDesc = { 1, 0 };
 	psoDesc.SampleMask = 0xffffffff;
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState.FrontCounterClockwise = TRUE;
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	if (FAILED(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pso)))) return false;
+
+	return true;
+}
+
+bool ModuleExercise5::loadModel()
+{
+	model = new Model();
+	model->load("../Game/Assets/Models/Duck/Duck.gltf", "../Game/Assets/Models/Duck/");
+
+	//materialBuffer = resources->createDefaultBuffer(materialData, alignUp(sizeof(MaterialData), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT));
 
 	return true;
 }

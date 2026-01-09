@@ -13,7 +13,8 @@ class ModuleResources;
 class ModuleCamera;
 class ModuleShaderDescriptors;
 class ModuleSampler;
-class ModuleExercise4;
+//class ModuleExercise4;
+class ModuleExercise5;
 
 class Application
 {
@@ -34,7 +35,8 @@ public:
 	ModuleShaderDescriptors*    getShaderDescriptors() { return shaderDescriptors; }
 	ModuleSampler*              getSampler() { return sampler; }
     
-    ModuleExercise4*            getCurrentExercise() { return exercise4; }
+    //ModuleExercise4*            getCurrentExercise() { return exercise4; }
+    ModuleExercise5*            getCurrentExercise() { return exercise5; }
 
     float                       getFPS() const { return 1000.0f * float(MAX_FPS_TICKS) / tickSum; }
     float                       getAvgElapsedMs() const { return tickSum / float(MAX_FPS_TICKS); }
@@ -57,7 +59,8 @@ private:
     ModuleCamera* camera = nullptr;
 	ModuleShaderDescriptors* shaderDescriptors = nullptr;
 	ModuleSampler* sampler = nullptr;
-	ModuleExercise4* exercise4 = nullptr;
+	//ModuleExercise4* exercise4 = nullptr;
+	ModuleExercise5* exercise5 = nullptr;
 
     uint64_t  lastMilis = 0;
     TickList  tickList;

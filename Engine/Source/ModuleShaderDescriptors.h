@@ -9,6 +9,7 @@ public:
 
 	bool init();
 	void createSRV(ID3D12Resource* texture, UINT srvIndex);
+	UINT createNullTexture2DSRV();
 	UINT allocDescriptor();
 	void reset();
 

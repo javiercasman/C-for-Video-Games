@@ -28,6 +28,11 @@
     <ClCompile Include="ModuleShaderDescriptors.cpp" />
     <ClCompile Include="ModuleExercise4.cpp" />
     <ClCompile Include="ModuleSampler.cpp" />
+    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="ModuleExercise5.cpp" />
+    <ClCompile Include="ModuleRingBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="3rdParty\imgui-docking\backends\imgui_impl_dx12.h" />
@@ -61,6 +66,12 @@
     <ClInclude Include="ModuleShaderDescriptors.h" />
     <ClInclude Include="ModuleExercise4.h" />
     <ClInclude Include="ModuleSampler.h" />
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="gltf_utils.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="ModuleExercise5.h" />
+    <ClInclude Include="ModuleRingBuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Engine.rc" />
@@ -79,5 +90,7 @@
     <FxCompile Include="Exercise3PS.hlsl" />
     <FxCompile Include="Exercise4PS.hlsl" />
     <FxCompile Include="Exercise4VS.hlsl" />
+    <FxCompile Include="Exercise5PS.hlsl" />
+    <FxCompile Include="Exercise5VS.hlsl" />
   </ItemGroup>
 </Project>

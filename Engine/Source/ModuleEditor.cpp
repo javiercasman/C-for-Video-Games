@@ -7,10 +7,14 @@
 #include "ImGuiPass.h"
 #include "ModuleSampler.h"
 #include "ModuleExercise4.h"
+#include "ModuleExercise5.h"
+#include "ImGuizmo.h"
+#include "Model.h"
 
 
 ModuleEditor::ModuleEditor(HWND wnd, ModuleD3D12* d3D12) : hWnd(wnd), d3d12(d3D12)
 {
+	gizmoOperation = ImGuizmo::TRANSLATE;
 }
 
 bool ModuleEditor::cleanUp()
@@ -44,6 +48,10 @@ bool ModuleEditor::postInit()
 void ModuleEditor::preRender()
 {
 	imGui->startFrame();
+	ImGuizmo::BeginFrame();
+	UINT width, height;
+	d3d12->getWindowSize(width, height);
+	ImGuizmo::SetRect(0, 0, float(width), float(height));
 }
 
 void ModuleEditor::render()
@@ -82,9 +90,9 @@ void ModuleEditor::render()
 	addFramerate();
 	char title[25];
 	sprintf_s(title, 25, "Framerate %.1f", fps_log[fps_log.size() - 1]);
-	ImGui::PlotHistogram("##framerate", &fps_log[0], fps_log.size(), 0, title, 0.0f, 100.0f, ImVec2(310, 100));
+	ImGui::PlotHistogram("##framerate", getHistogramValue, &fps_log, fps_log.size(), 0, title, 0.0f, 100.0f, ImVec2(310, 100));
 	sprintf_s(title, 25, "Milliseconds %0.1f", ms_log[ms_log.size() - 1]);
-	ImGui::PlotHistogram("##milliseconds", &ms_log[0], ms_log.size(), 0, title, 0.0f, 40.0f, ImVec2(310, 100));
+	ImGui::PlotHistogram("##milliseconds", getHistogramValue, &ms_log, ms_log.size(), 0, title, 0.0f, 40.0f, ImVec2(310, 100));
 
 	ImGui::End();
 
@@ -134,8 +142,52 @@ void ModuleEditor::render()
 	{
 		app->getCurrentExercise()->setShowGrid(gridOn);
 	}
+	if (ImGui::Checkbox("Show Guizmo", &guizmoOn))
+	{
+		app->getCurrentExercise()->setShowGrid(guizmoOn);
+	}
+
+	Matrix objectMatrix = app->getCurrentExercise()->getModel()->getModelMatrix();
+
+	static ImGuizmo::OPERATION gizmoOperation = ImGuizmo::TRANSLATE;
+	if (ImGui::IsKeyPressed(ImGuiKey_W)) gizmoOperation = ImGuizmo::TRANSLATE;
+	if (ImGui::IsKeyPressed(ImGuiKey_E)) gizmoOperation = ImGuizmo::ROTATE;
+	if (ImGui::IsKeyPressed(ImGuiKey_R)) gizmoOperation = ImGuizmo::SCALE;
+
+	ImGui::RadioButton("Translate", (int*)&gizmoOperation, (int)ImGuizmo::TRANSLATE);
+	ImGui::SameLine();
+	ImGui::RadioButton("Rotate", (int*)&gizmoOperation, ImGuizmo::ROTATE);
+	ImGui::SameLine();
+	ImGui::RadioButton("Scale", (int*)&gizmoOperation, ImGuizmo::SCALE);
+
+	float translation[3], rotation[3], scale[3];
+	ImGuizmo::DecomposeMatrixToComponents((float*)&objectMatrix, translation, rotation, scale);
+	bool transform_changed = ImGui::DragFloat3("Tr", translation, 0.1f);
+	transform_changed = transform_changed || ImGui::DragFloat3("Rt", rotation, 0.1f);
+	transform_changed = transform_changed || ImGui::DragFloat3("Sc", scale, 0.1f);
+
+	if (transform_changed)
+	{
+		ImGuizmo::RecomposeMatrixFromComponents(translation, rotation, scale, (float*)&objectMatrix);
+
+		app->getCurrentExercise()->getModel()->setModelMatrix(objectMatrix);
+	}
 
 	ImGui::End();
+
+	if (guizmoOn)
+	{
+		const Matrix& viewMatrix = app->getCamera()->getViewMatrix();
+		const Matrix& projMatrix = app->getCamera()->getProjectionMatrix();
+
+		// Manipulate the object
+		ImGuizmo::Manipulate((const float*)&viewMatrix, (const float*)&projMatrix, gizmoOperation, ImGuizmo::LOCAL, (float*)&objectMatrix);
+	}
+
+	if (ImGuizmo::IsUsing())
+	{
+		app->getCurrentExercise()->getModel()->setModelMatrix(objectMatrix);
+	}
 
 	imGui->record(commandList);
 }
@@ -176,6 +228,6 @@ void ModuleEditor::addFramerate()
 
 	// Limitar tamaño (ejemplo: 200 muestras)
 	const int max_samples = 100;
-	if (fps_log.size() > max_samples) fps_log.erase(fps_log.begin());
-	if (ms_log.size() > max_samples) ms_log.erase(ms_log.begin());
+	if (fps_log.size() > max_samples) fps_log.pop_front();
+	if (ms_log.size() > max_samples) ms_log.pop_front();
 }

@@ -1,8 +1,14 @@
 #pragma once
 
 #include "Module.h"
+#include <deque>
 
 class ImGuiPass;
+
+namespace ImGuizmo {
+	enum OPERATION;
+}
+
 
 class ModuleEditor : public Module
 {
@@ -22,8 +28,8 @@ private:
 	HWND hWnd = NULL;
 	ModuleD3D12* d3d12 = nullptr;
 	ImGuiPass* imGui = nullptr;
-	std::vector<float> fps_log;
-	std::vector<float> ms_log;
+	std::deque<float> fps_log;
+	std::deque<float> ms_log;
 
 	float fov;
 	float nearZ;
@@ -31,6 +37,7 @@ private:
 	int samplerType;
 	bool gridOn = true;
 	bool axisOn = true;
+	bool guizmoOn = true;
 
 	ID3D12Device2* device;
 	ID3D12GraphicsCommandList* commandList;
@@ -38,5 +45,13 @@ private:
 	ID3D12CommandQueue* commandQueue;
 
 	std::vector<std::string> logBuffer;
+
+	static float getHistogramValue(void* data, int idx)
+	{
+		auto* deque = static_cast<std::deque<float>*>(data);
+		return (*deque)[idx];
+	}
+
+	ImGuizmo::OPERATION gizmoOperation;
 };
 

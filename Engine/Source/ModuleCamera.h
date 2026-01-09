@@ -18,8 +18,8 @@ public:
 	//void setPosition();
 	//void setOrientation();
 
-	Matrix getViewMatrix() const { return view; }
-	Matrix getProjectionMatrix() const { return proj; }
+	const Matrix& getViewMatrix() const { return view; }
+	const Matrix& getProjectionMatrix() const { return proj; }
 	float getFOV() const { return fovh; }
 	float getNear() const { return nearZ; }
 	float getFar() const { return farZ; }
