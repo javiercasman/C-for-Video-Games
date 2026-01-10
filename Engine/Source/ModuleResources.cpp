@@ -35,15 +35,36 @@ ComPtr<ID3D12Resource> ModuleResources::createUploadBuffer(const void* data, siz
 	BYTE* pData = nullptr;
 	CD3DX12_RANGE readRange(0, 0); // We won't read from it, so range is (0,0)
 	buffer->Map(0, &readRange, reinterpret_cast<void**>(&pData));
-	if (data != nullptr) //si data == nullptr, solo queremos crear el buffer y lo tenemos mapeado permanentemente (ring buffer)
-	{
-		// Copy our application data into the buffer
-		memcpy(pData, data, size);
-		// Unmap the buffer (invalidate the pointer)
-		buffer->Unmap(0, nullptr);
-	}
+
+	// Copy our application data into the buffer
+	memcpy(pData, data, size);
+	// Unmap the buffer (invalidate the pointer)
+	buffer->Unmap(0, nullptr);
 
 	return buffer;
+}
+
+UploadBuffer ModuleResources::createMappedUploadBuffer(size_t size, const char* name)
+{
+	ComPtr<ID3D12Resource> buffer;
+	// 1. Describe the buffer
+	D3D12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(size);
+	// 2. Specify UPLOAD heap properties
+	CD3DX12_HEAP_PROPERTIES uploadHeap(D3D12_HEAP_TYPE_UPLOAD);
+	// 3. Create the resource
+	device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&buffer));
+
+	// Map the buffer: get a CPU pointer to its memory
+	BYTE* pData = nullptr;
+	CD3DX12_RANGE readRange(0, 0); // We won't read from it, so range is (0,0)
+	buffer->Map(0, &readRange, reinterpret_cast<void**>(&pData));
+
+	UploadBuffer uploadBuffer;
+
+	uploadBuffer.resource = buffer;
+	uploadBuffer.mappedData = reinterpret_cast<char*>(pData);
+
+	return uploadBuffer;
 }
 
 ComPtr<ID3D12Resource> ModuleResources::createDefaultBuffer(const void* data, size_t size, const char* name)

@@ -4,12 +4,19 @@
 
 #include <filesystem>
 
+struct UploadBuffer
+{
+	ComPtr<ID3D12Resource> resource;
+	char* mappedData;
+};
+
 class ModuleResources : public Module
 {
 public:
 	ModuleResources(ModuleD3D12* d3D12);
 	bool init();
 	ComPtr<ID3D12Resource> createUploadBuffer(const void* data, size_t size, const char* name);
+	UploadBuffer createMappedUploadBuffer(size_t size, const char* name);
 	ComPtr<ID3D12Resource> createDefaultBuffer(const void* data, size_t size, const char* name);
 	ComPtr<ID3D12Resource> createDepthStencil(size_t width, size_t height, const char* name);
 	ComPtr<ID3D12Resource> createTextureFromFile(const std::filesystem::path& path);
