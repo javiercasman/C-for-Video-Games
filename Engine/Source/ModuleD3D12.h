@@ -24,6 +24,7 @@ public:
 	ID3D12CommandAllocator* getCommandAllocator() const { return commandAllocators[frameIndex].Get(); }
 	ID3D12CommandQueue* getCommandQueue() const { return commandQueue.Get(); }
 	ID3D12Resource* getCurrentBackBuffer() const { return renderTargets[frameIndex].Get(); }
+	UINT getCurrentBackBufferIndex() const { return frameIndex; }
 	CD3DX12_CPU_DESCRIPTOR_HANDLE getCurrentRtv() const { CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorIncrementSize); return rtvHandle; }
 	CD3DX12_CPU_DESCRIPTOR_HANDLE getDsv() const { CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsvHeap->GetCPUDescriptorHandleForHeapStart()); return dsvHandle; }
 private:

@@ -1,15 +1,20 @@
 #include "Globals.h"
 #include "ModuleRingBuffer.h"
 
+#include "ModuleD3D12.h"
 #include "ModuleResources.h"
 
 #define RING_BUFFER_SIZE (1024 * 1024 * 10) //10 MB
 
+ModuleRingBuffer::ModuleRingBuffer(ModuleD3D12* d3D12, ModuleResources* moduleResources) : d3d12(d3D12), resources(moduleResources)
+{
+}
+
 bool ModuleRingBuffer::init()
 {
 	bufferSize = alignUp(RING_BUFFER_SIZE, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
-	ringBuffer, ringBufferData = app->getResources()->createMappedUploadBuffer(bufferSize, "Ring Buffer"); //10 MB, permanently mapped porque data == nullptr
-	
+	ringBuffer, ringBufferData = resources->createMappedUploadBuffer(bufferSize, "Ring Buffer"); //10 MB, permanently mapped porque data == nullptr
+
 	head = 0;
 	tail = 0;
 
@@ -75,6 +80,10 @@ D3D12_GPU_VIRTUAL_ADDRESS ModuleRingBuffer::AllocBuffer(const void* data, size_t
 
 void ModuleRingBuffer::preRender()
 {
-	tail = head;
-	totalAllocatedSize = 0;
+	currentFrame = d3d12->getCurrentBackBufferIndex();
+
+	tail = (tail + allocatedThisFrame[currentFrame]) % bufferSize;
+	totalAllocatedize -= allocatedThisFrame[currentFrame];
+
+	allocatedThisFrame[currentFrame] = 0;
 }

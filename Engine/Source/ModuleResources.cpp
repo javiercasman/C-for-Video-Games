@@ -4,6 +4,12 @@
 
 #include "DirectXTex.h"
 
+struct UploadBuffer
+{
+	ComPtr<ID3D12Resource> resource;
+	char* mappedData;
+};
+
 ModuleResources::ModuleResources(ModuleD3D12* d3D12) : d3d12(d3D12)
 {
 }

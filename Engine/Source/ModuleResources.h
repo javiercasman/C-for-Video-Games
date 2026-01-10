@@ -4,12 +4,6 @@
 
 #include <filesystem>
 
-struct UploadBuffer
-{
-	ComPtr<ID3D12Resource> resource;
-	char* mappedData;
-};
-
 class ModuleResources : public Module
 {
 public:
