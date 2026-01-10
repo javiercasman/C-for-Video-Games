@@ -25,12 +25,15 @@ Application::Application(int argc, wchar_t** argv, void* hWnd)
     modules.push_back(shaderDescriptors = new ModuleShaderDescriptors(d3d12));
     modules.push_back(sampler = new ModuleSampler(d3d12));
 	modules.push_back(ringBuffer = new ModuleRingBuffer(d3d12, resources));
-    //modules.push_back(new ModuleExercise2(d3d12));
-    //modules.push_back(new ModuleExercise3(d3d12, camera));
-	//modules.push_back(exercise4 = new ModuleExercise4(d3d12, camera));
-	//modules.push_back(exercise5 = new ModuleExercise5(d3d12, camera));
-	modules.push_back(exercise6 = new ModuleExercise6(d3d12, camera, ringBuffer));
+    modules.push_back(exercise2 = new ModuleExercise2(d3d12)); ++exerciseCount;
+    modules.push_back(exercise3 = new ModuleExercise3(d3d12, camera)); ++exerciseCount;
+	modules.push_back(exercise4 = new ModuleExercise4(d3d12, camera)); ++exerciseCount;
+	modules.push_back(exercise5 = new ModuleExercise5(d3d12, camera)); ++exerciseCount;
+	modules.push_back(exercise6 = new ModuleExercise6(d3d12, camera, ringBuffer)); ++exerciseCount;
     modules.push_back(editor = new ModuleEditor((HWND)hWnd, d3d12)); //ModuleEditor no funciona por si solo. tiene que ir despues de un modulo q renderize (los ejercicios)
+
+	exercise6->setIsExercise6(true);
+	currentExerciseIndex = 4;
 }
 
 Application::~Application()
@@ -107,7 +110,29 @@ bool Application::cleanUp()
 	return ret;
 }
 
-void Application::addLog(const char* msg) 
+void Application::setCurrentExercise(int exerciseIndex)
+{
+    if (exerciseIndex < 0 || exerciseIndex >= exerciseCount || exerciseIndex == currentExerciseIndex) return;
+    switch(currentExerciseIndex)
+    {
+	    case 2: exercise2->setIsExercise2(false); break;
+		case 3: exercise3->setIsExercise3(false); break;
+        case 4: exercise4->setIsExercise4(false); break;
+        case 5: exercise5->setIsExercise5(false); break;
+        case 6: exercise6->setIsExercise6(false); break;
+	}
+    currentExerciseIndex = exerciseIndex;
+    switch (currentExerciseIndex)
+    {
+        case 2: exercise2->setIsExercise2(true); break;
+        case 3: exercise3->setIsExercise3(true); break;
+        case 4: exercise4->setIsExercise4(true); break;
+        case 5: exercise5->setIsExercise5(true); break;
+        case 6: exercise6->setIsExercise6(true); break;
+    }
+}
+
+void Application::addLog(const char* msg)
 { 
     if (editor) editor->addLog(msg); 
 }

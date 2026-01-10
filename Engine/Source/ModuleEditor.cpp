@@ -74,7 +74,110 @@ void ModuleEditor::render()
 	//	ImGui::EndMenu();
 	//}
 	//ImGui::EndMainMenuBar();
+	/*
+	std::vector<std::string> str;
+	int exerciseCount = app->getExerciseCount();
 
+	for (int i = 2; i <= exerciseCount; ++i) {
+		str.push_back("Exercise " + std::to_string(i));
+	}
+
+	std::vector<const char*> exerciseOptions;
+	for (const auto& s : str) {
+		exerciseOptions.push_back(s.c_str()); 
+	}
+
+	int exerciseIndex = -1;
+
+	ImGui::Begin("Exercise selector");
+
+	if (ImGui::Combo("Type", &exerciseIndex, exerciseOptions.data(), exerciseCount))
+	{
+		app->setCurrentExercise(exerciseIndex);
+	}
+
+	ImGui::End();
+	*/
+
+	/*
+	switch (app->getCurrentExerciseIndex())
+	{
+		case 2:
+			exercise2GUI();
+			break;
+		case 3:
+			exercise3GUI();
+			break;
+		case 4:
+			exercise4GUI();
+			break;
+		case 5:
+			exercise5GUI();
+			break;
+		case 6:
+			exercise6GUI();
+			break;
+		default:
+			break;
+	}
+	*/
+	exercise6GUI();
+
+	imGui->record(commandList);
+}
+
+void ModuleEditor::update()
+{
+	/*if (fov != app->getCamera()->getFOV()) 
+	{
+		app->getCamera()->setFOV(fov);
+	}
+	if (nearZ != app->getCamera()->getNear()) 
+	{
+		app->getCamera()->setNear(nearZ);
+	}
+	if (farZ != app->getCamera()->getFar()) 
+	{
+		app->getCamera()->setFar(farZ);
+	}
+	if(ModuleSampler::Type(samplerType) != app->getCurrentExercise()->getSamplerType())
+	{
+		app->getCurrentExercise()->setSampler(ModuleSampler::Type(samplerType));
+	}*/
+}
+
+void ModuleEditor::addLog(const char* msg)
+{
+	if (msg && msg[0] != '\0')
+		logBuffer.emplace_back(msg);
+}
+
+void ModuleEditor::addFramerate()
+{
+	float ms = app->getAvgElapsedMs();
+	float fps = app->getFPS();
+
+	fps_log.push_back(fps);
+	ms_log.push_back(ms);
+
+	// Limitar tamaño (ejemplo: 200 muestras)
+	const int max_samples = 100;
+	if (fps_log.size() > max_samples) fps_log.pop_front();
+	if (ms_log.size() > max_samples) ms_log.pop_front();
+}
+
+void ModuleEditor::exercise2GUI()
+{
+	//nada
+}
+
+void ModuleEditor::exercise3GUI()
+{
+	//nada
+}
+
+void ModuleEditor::exercise4GUI()
+{
 	ImGui::Begin("Console");
 
 	if (ImGui::Button("Clear")) logBuffer.clear();
@@ -126,7 +229,7 @@ void ModuleEditor::render()
 		"Point / Clamp"
 	};
 
-	if(ImGui::Combo("Type", &samplerType, samplerNames, ModuleSampler::COUNT))
+	if (ImGui::Combo("Type", &samplerType, samplerNames, ModuleSampler::COUNT))
 	{
 		app->getCurrentExercise()->setSampler(ModuleSampler::Type(samplerType));
 	}
@@ -135,14 +238,19 @@ void ModuleEditor::render()
 
 	ImGui::Begin("Debug");
 
-	if(ImGui::Checkbox("Show Axis", &axisOn)) 
+	if (ImGui::Checkbox("Show Axis", &axisOn))
 	{
 		app->getCurrentExercise()->setShowAxis(axisOn);
 	}
-	if(ImGui::Checkbox("Show Grid", &gridOn)) 
+	if (ImGui::Checkbox("Show Grid", &gridOn))
 	{
 		app->getCurrentExercise()->setShowGrid(gridOn);
 	}
+}
+
+void ModuleEditor::exercise5GUI()
+{
+	exercise4GUI();
 	if (ImGui::Checkbox("Show Guizmo", &guizmoOn))
 	{
 		app->getCurrentExercise()->setShowGrid(guizmoOn);
@@ -187,48 +295,65 @@ void ModuleEditor::render()
 
 	if (ImGuizmo::IsUsing())
 	{
+		//no entra
 		app->getCurrentExercise()->getModel()->setModelMatrix(objectMatrix);
 	}
-
-	imGui->record(commandList);
 }
 
-void ModuleEditor::update()
+void ModuleEditor::exercise6GUI()
 {
-	/*if (fov != app->getCamera()->getFOV()) 
+	exercise5GUI();
+
+	ModuleExercise6::Light& light = app->getCurrentExercise()->getLight();
+	if (ImGui::CollapsingHeader("Light", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		app->getCamera()->setFOV(fov);
+		ImGui::DragFloat3("Light Direction", reinterpret_cast<float*>(&light.L), 0.1f, -1.0f, 1.0f);
+		ImGui::SameLine();
+		if (ImGui::SmallButton("Normalize"))
+		{
+			light.L.Normalize();
+		}
+		ImGui::ColorEdit3("Light Colour", reinterpret_cast<float*>(&light.Lc), ImGuiColorEditFlags_NoAlpha);
+		ImGui::ColorEdit3("Ambient Colour", reinterpret_cast<float*>(&light.Ac), ImGuiColorEditFlags_NoAlpha);
 	}
-	if (nearZ != app->getCamera()->getNear()) 
+
+	for (Material* material : app->getCurrentExercise()->getModel()->getMaterials())
 	{
-		app->getCamera()->setNear(nearZ);
+		if (material->getMaterialType() == Material::Phong)
+		{
+			char tmp[256];
+			_snprintf_s(tmp, 255, "Material %s", material->getName());
+
+			if (ImGui::CollapsingHeader(tmp, ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				PhongMaterialData phong = material->getPhongMaterial();
+				if (ImGui::ColorEdit3("Diffuse Colour", reinterpret_cast<float*>(&phong.diffuseColour)))
+				{
+					material->setPhongMaterial(phong);
+				}
+
+				bool hasTexture = phong.hasDiffuseTexture;
+				if (ImGui::Checkbox("Use Texture", &hasTexture))
+				{
+					phong.hasDiffuseTexture = hasTexture;
+					material->setPhongMaterial(phong);
+				}
+
+				if (ImGui::DragFloat("Kd", &phong.kd, 0.01f))
+				{
+					material->setPhongMaterial(phong);
+				}
+
+				if (ImGui::DragFloat("Ks", &phong.ks, 0.01f))
+				{
+					material->setPhongMaterial(phong);
+				}
+
+				if (ImGui::DragFloat("shininess", &phong.shininess))
+				{
+					material->setPhongMaterial(phong);
+				}
+			}
+		}
 	}
-	if (farZ != app->getCamera()->getFar()) 
-	{
-		app->getCamera()->setFar(farZ);
-	}
-	if(ModuleSampler::Type(samplerType) != app->getCurrentExercise()->getSamplerType())
-	{
-		app->getCurrentExercise()->setSampler(ModuleSampler::Type(samplerType));
-	}*/
-}
-
-void ModuleEditor::addLog(const char* msg)
-{
-	if (msg && msg[0] != '\0')
-		logBuffer.emplace_back(msg);
-}
-
-void ModuleEditor::addFramerate()
-{
-	float ms = app->getAvgElapsedMs();
-	float fps = app->getFPS();
-
-	fps_log.push_back(fps);
-	ms_log.push_back(ms);
-
-	// Limitar tamaño (ejemplo: 200 muestras)
-	const int max_samples = 100;
-	if (fps_log.size() > max_samples) fps_log.pop_front();
-	if (ms_log.size() > max_samples) ms_log.pop_front();
 }

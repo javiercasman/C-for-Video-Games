@@ -30,6 +30,7 @@ bool ModuleExercise3::init()
 
 void ModuleExercise3::render()
 {
+	if (isCurrentExercise == false) return;
 	commandAllocator = d3d12->getCommandAllocator(); //a lo mejor esto no es necesario? si solo usamos el get, asi no hacemos un nuevo comptr y tal
 	commandList->Reset(commandAllocator, pso.Get());
 

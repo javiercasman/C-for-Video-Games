@@ -22,6 +22,9 @@ public:
 	void setShowGuizmo(const bool show) { showGuizmo = show; }
 
 	Model* getModel() const { return model; }
+
+	bool isExercise5() const { return isCurrentExercise; }
+	void setIsExercise5(const bool isExercise) { isCurrentExercise = isExercise; }
 private:
 	ModuleD3D12* d3d12;
 	ModuleCamera* camera;
@@ -56,4 +59,6 @@ private:
 	bool createRootSignature();
 	bool createPSO();
 	bool loadModel();
+
+	bool isCurrentExercise = false;
 };

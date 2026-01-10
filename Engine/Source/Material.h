@@ -34,6 +34,10 @@ public:
 	const PhongMaterialData& getPhongMaterial() const { if (type == Phong) return materialData.phong; }
 
 	ModuleShaderDescriptors* getDescriptors() const { return descriptors; }
+	MaterialType getMaterialType() const { return type; }
+	const std::string& getName() const { return name; }
+
+	void setPhongMaterial(const PhongMaterialData& phong) { if (type == Phong) materialData.phong = phong; }
 
 private:
 	union
@@ -41,6 +45,7 @@ private:
 		BasicMaterialData basic;
 		PhongMaterialData phong;
 	} materialData;
+	std::string name;
 	MaterialType type;
 	Vector4 colour;
 	ComPtr<ID3D12Resource> colourTex;

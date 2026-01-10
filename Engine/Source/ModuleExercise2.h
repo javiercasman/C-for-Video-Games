@@ -10,6 +10,9 @@ public:
 	void render();
 	void postRender();
 
+	bool isExercise2() const { return isCurrentExercise; }
+	void setIsExercise2(const bool isExercise) { isCurrentExercise = isExercise; }
+
 private:
 	ModuleD3D12* d3d12;
 	ID3D12Device5* device;
@@ -25,4 +28,6 @@ private:
 	bool createVertexBuffer();
 	bool createRootSignature();
 	bool createPSO();
+
+	bool isCurrentExercise = false;
 };

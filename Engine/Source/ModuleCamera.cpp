@@ -100,7 +100,6 @@ void ModuleCamera::update()
 	{
 		if (keyboardState.LeftAlt)
 		{
-			//girar alrededor de target. la cosa es que si no haces f, esto queda feo. la gracia y el buen uso es hacer f + orbit
 			yaw += float(lastX - mouseState.x) * SENSITIVITY;
 			pitch += float(lastY - mouseState.y) * SENSITIVITY;
 
@@ -150,7 +149,7 @@ void ModuleCamera::update()
 	{
 		if (!fPressed) {
 			fPressed = true;
-			target = Vector3::Zero; //de momento el target sera lo q hay en 0,0 mas adelante lo cambiaremos
+			target = Vector3::Zero; //de momento el target sera 0.0, mas adelante lo cambiaremos
 			if (frameFar)
 			{
 				eye = target - forward * FRAME_DIST_1;

@@ -4,6 +4,7 @@
 #include <deque>
 
 class ImGuiPass;
+struct Light;
 
 namespace ImGuizmo 
 {
@@ -54,5 +55,11 @@ private:
 	}
 
 	ImGuizmo::OPERATION gizmoOperation;
+
+	void exercise2GUI();
+	void exercise3GUI();
+	void exercise4GUI();
+	void exercise5GUI();
+	void exercise6GUI();
 };
 

@@ -50,6 +50,10 @@ public:
 	void setShowGuizmo(const bool show) { showGuizmo = show; }
 
 	Model* getModel() const { return model; }
+	Light& getLight() { return light; }
+
+	bool isExercise6() const { return isCurrentExercise; }
+	void setIsExercise6(const bool isExercise) { isCurrentExercise = isExercise; }
 private:
 	ModuleD3D12* d3d12;
 	ModuleCamera* camera;
@@ -86,4 +90,6 @@ private:
 	bool createRootSignature();
 	bool createPSO();
 	bool loadModel();
+
+	bool isCurrentExercise = false;
 };

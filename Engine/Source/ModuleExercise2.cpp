@@ -23,6 +23,7 @@ bool ModuleExercise2::init()
 
 void ModuleExercise2::render()
 {
+	if(isCurrentExercise == false) return;
 	commandAllocator = d3d12->getCommandAllocator();
 	//commandList->Close();
 	commandList->Reset(commandAllocator, pso.Get());

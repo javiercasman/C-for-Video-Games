@@ -18,6 +18,7 @@ Material::~Material()
 
 void Material::load(const tinygltf::Model& model, const tinygltf::Material& material, const char* basePath, std::vector<ComPtr<ID3D12Resource>>& materialBuffers)
 {
+	name = material.name;
 	colour = Vector4(float(material.pbrMetallicRoughness.baseColorFactor[0]),
 		float(material.pbrMetallicRoughness.baseColorFactor[1]),
 		float(material.pbrMetallicRoughness.baseColorFactor[2]),

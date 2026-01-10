@@ -15,6 +15,7 @@ public:
 	void draw(ID3D12GraphicsCommandList* commandList) const;
 	void setModelMatrix(const Matrix& matrix) { modelMatrix = matrix; }
 	Matrix getModelMatrix() const { return modelMatrix; }
+	std::vector<Material*> getMaterials() const { return materials; }
 private:
 	std::vector<Mesh*> meshes;
 	std::vector<Material*> materials;

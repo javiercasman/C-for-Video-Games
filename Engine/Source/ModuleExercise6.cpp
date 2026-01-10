@@ -44,6 +44,7 @@ bool ModuleExercise6::init()
 
 void ModuleExercise6::render()
 {
+	if (isCurrentExercise == false) return;
 	commandAllocator = d3d12->getCommandAllocator();
 	//reset commandallocator
 	commandList->Reset(commandAllocator, pso.Get());

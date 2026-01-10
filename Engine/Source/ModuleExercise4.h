@@ -18,6 +18,9 @@ public:
 
 	void setShowAxis(const bool show) { showAxis = show; }
 	void setShowGrid(const bool show) { showGrid = show; }
+
+	bool isExercise4() const { return isCurrentExercise; }
+	void setIsExercise4(const bool isExercise) { isCurrentExercise = isExercise; }
 private:
 	ModuleD3D12* d3d12;
 	ModuleCamera* camera;
@@ -47,4 +50,6 @@ private:
 	bool createVertexBuffer();
 	bool createRootSignature();
 	bool createPSO();
+
+	bool isCurrentExercise = false;
 };

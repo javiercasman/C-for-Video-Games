@@ -13,8 +13,10 @@ class ModuleResources;
 class ModuleCamera;
 class ModuleShaderDescriptors;
 class ModuleSampler;
-//class ModuleExercise4;
-//class ModuleExercise5;
+class ModuleExercise2;
+class ModuleExercise3;
+class ModuleExercise4;
+class ModuleExercise5;
 class ModuleExercise6;
 class ModuleRingBuffer;
 
@@ -46,8 +48,11 @@ public:
     float                       getAvgElapsedMs() const { return tickSum / float(MAX_FPS_TICKS); }
     uint64_t                    getElapsedMilis() const { return elapsedMilis; }
 
+    int 					    getExerciseCount() const { return exerciseCount; }
+
     bool                        isPaused() const { return paused; }
     bool                        setPaused(bool p) { paused = p; return paused; }
+    void						setCurrentExercise(int exerciseIndex);
 
     void addLog(const char* msg);
 
@@ -63,8 +68,10 @@ private:
     ModuleCamera* camera = nullptr;
 	ModuleShaderDescriptors* shaderDescriptors = nullptr;
 	ModuleSampler* sampler = nullptr;
-	//ModuleExercise4* exercise4 = nullptr;
-	//ModuleExercise5* exercise5 = nullptr;
+	ModuleExercise2* exercise2 = nullptr;
+	ModuleExercise3* exercise3 = nullptr;
+	ModuleExercise4* exercise4 = nullptr;
+	ModuleExercise5* exercise5 = nullptr;
 	ModuleExercise6* exercise6 = nullptr;
 	ModuleRingBuffer* ringBuffer = nullptr;
 
@@ -74,6 +81,8 @@ private:
     uint64_t  tickSum = 0;
     uint64_t  elapsedMilis = 0;
     bool      paused = false;
+    int       exerciseCount = 0;
+	int       currentExerciseIndex = -1;
 };
 
 extern Application* app;
