@@ -75,7 +75,6 @@ void ModuleD3D12::postRender()
 	swapChain->Present(1, 0);
 	
 	currentFenceValue = fenceValues[frameIndex] + 1;
-	//SIGNAL
 	commandQueue->Signal(Fence.Get(), currentFenceValue);
 	fenceValues[frameIndex] = currentFenceValue;
 

@@ -23,6 +23,7 @@ public:
 	float getFOV() const { return fovh; }
 	float getNear() const { return nearZ; }
 	float getFar() const { return farZ; }
+	Vector3 getPosition() const { return eye; }
 
 private:
 	ModuleD3D12* d3d12;

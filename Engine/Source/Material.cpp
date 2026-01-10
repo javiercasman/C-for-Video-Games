@@ -8,7 +8,7 @@
 #define TINYGLTF_NO_EXTERNAL_IMAGE
 #include "tiny_gltf.h"
 
-Material::Material()
+Material::Material(MaterialType Type) : type(Type)
 {
 }
 
@@ -39,13 +39,13 @@ void Material::load(const tinygltf::Model& model, const tinygltf::Material& mate
 
 	else hasColourTex = FALSE;
 
-	if (materialData.type == MaterialData::Basic)
+	if (type == Basic)
 	{
 		materialData.basic.baseColour = colour;
 		materialData.basic.hasColourTexture = hasColourTex;
 	}
 	
-	else if (materialData.type == MaterialData::Phong)
+	else if (type == Phong)
 	{
 		materialData.phong.diffuseColour = colour;
 		materialData.phong.kd = 0.85f;

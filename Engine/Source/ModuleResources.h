@@ -4,6 +4,8 @@
 
 #include <filesystem>
 
+struct UploadBuffer;
+
 class ModuleResources : public Module
 {
 public:

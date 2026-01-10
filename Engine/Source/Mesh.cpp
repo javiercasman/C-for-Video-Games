@@ -80,6 +80,5 @@ void Mesh::draw(ID3D12GraphicsCommandList* commandList) const
 		commandList->IASetIndexBuffer(&indexBufferView);
 		commandList->DrawIndexedInstanced(numIndices, 1, 0, 0, 0);
 	}
-	else 
-		commandList->DrawInstanced(numVertices, 1, 0, 0);
+	else commandList->DrawInstanced(numVertices, 1, 0, 0);
 }

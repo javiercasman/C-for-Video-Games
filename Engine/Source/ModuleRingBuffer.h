@@ -2,7 +2,7 @@
 
 #include "Module.h"
 
-class ModuleRingBuffer
+class ModuleRingBuffer : public Module
 {
 public:
 	ModuleRingBuffer(ModuleD3D12* d3D12, ModuleResources* moduleResources);
@@ -24,4 +24,4 @@ private:
 	UINT head;
 	UINT tail;
 	UINT currentFrame;
-}
+};

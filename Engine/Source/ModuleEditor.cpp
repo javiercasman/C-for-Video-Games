@@ -8,6 +8,7 @@
 #include "ModuleSampler.h"
 #include "ModuleExercise4.h"
 #include "ModuleExercise5.h"
+#include "ModuleExercise6.h"
 #include "ImGuizmo.h"
 #include "Model.h"
 

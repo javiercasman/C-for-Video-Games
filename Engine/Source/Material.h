@@ -4,13 +4,13 @@ namespace tinygltf { struct Material; class Model; }
 
 struct BasicMaterialData
 {
-	Vector4 baseColour;
+	XMFLOAT4 baseColour;
 	BOOL	hasColourTexture; // use BOOL (4 bytes) instead of c++ bool (1 byte) as HLSL bool is 4 bytes long
 };
 
 struct PhongMaterialData
 {
-	Vector4	diffuseColour;
+	XMFLOAT4 diffuseColour;
 	float	kd;
 	float	ks;
 	float	shininess;
@@ -20,30 +20,30 @@ struct PhongMaterialData
 class Material
 {
 public:
-
-	struct MaterialData
+	enum MaterialType
 	{
-		enum MaterialType
-		{
-			Basic,
-			Phong
-		} type;
-		union
-		{
-			BasicMaterialData basic;
-			PhongMaterialData phong;
-		};
+		Basic,
+		Phong
 	};
-	
-	Material();
+
+public:
+	Material(MaterialType Type);
 	~Material();
+
 	void load(const tinygltf::Model& model, const tinygltf::Material& material, const char* basePath, std::vector<ComPtr<ID3D12Resource>> &materialBuffers);
+	const PhongMaterialData& getPhongMaterial() const { if (type == Phong) return materialData.phong; }
 
 	ModuleShaderDescriptors* getDescriptors() const { return descriptors; }
-private:
-	ModuleShaderDescriptors* descriptors;
 
-	MaterialData materialData;
+private:
+	union
+	{
+		BasicMaterialData basic;
+		PhongMaterialData phong;
+	} materialData;
+	MaterialType type;
 	Vector4 colour;
 	ComPtr<ID3D12Resource> colourTex;
+
+	ModuleShaderDescriptors* descriptors;
 };

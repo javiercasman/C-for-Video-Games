@@ -1,5 +1,5 @@
 #include "Globals.h"
-#include "ModuleExercise5.h"
+#include "ModuleExercise6.h"
 #include "ModuleResources.h"
 #include "ModuleD3D12.h"
 #include "ModuleCamera.h"
@@ -10,12 +10,13 @@
 #include "ModuleShaderDescriptors.h"
 #include "ModuleSampler.h"
 #include "Model.h"
+#include "ModuleRingBuffer.h"
 
-ModuleExercise5::ModuleExercise5(ModuleD3D12* d3D12, ModuleCamera* Camera) : d3d12(d3D12), camera(Camera)
+ModuleExercise6::ModuleExercise6(ModuleD3D12* d3D12, ModuleCamera* Camera, ModuleRingBuffer* RingBuffer) : d3d12(d3D12), camera(Camera), ringBuffer(RingBuffer)
 {
 }
 
-bool ModuleExercise5::init()
+bool ModuleExercise6::init()
 {
 	commandList = d3d12->getCommandList();
 	device = d3d12->getDevice();
@@ -37,7 +38,11 @@ bool ModuleExercise5::init()
 	return ret;
 }
 
-void ModuleExercise5::render()
+
+//TODO: en moduleeditor vamos a hacer diferentes funciones segun el ejercicio que queramos hacer. para hacerlo mas sencillo en un futuro, mas modular. hay que hacer que en este ejercicio haga lo mismo del 5 ademas de mdofiicar y actualizar en tiempo real los parametros
+// de phong
+
+void ModuleExercise6::render()
 {
 	commandAllocator = d3d12->getCommandAllocator();
 	//reset commandallocator
@@ -61,6 +66,13 @@ void ModuleExercise5::render()
 	Matrix viewMatrix = camera->getViewMatrix();
 	Matrix projMatrix = camera->getProjectionMatrix();
 
+	PerFrame perFrame;
+	perFrame.L = light.L;
+	perFrame.L.Normalize();
+	perFrame.Lc = light.Lc;
+	perFrame.Ac = light.Ac;
+	perFrame.viewPos = camera->getPosition();
+
 	//Set current Render Target by calling OMSetRenderTargets and clear it with ClearRenderTargetView
 	float clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
 	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
@@ -83,10 +95,12 @@ void ModuleExercise5::render()
 	ID3D12DescriptorHeap* descriptorHeaps[] = { shaderDescriptors->getHeap(), samplers->getHeap() };
 	commandList->SetDescriptorHeaps(2, descriptorHeaps);
 
-	commandList->SetGraphicsRootDescriptorTable(3, samplers->getGPUHandle(samplerType)); //sampler de momento 0, haremos q con imgui pueda cambiar el sampler
+	commandList->SetGraphicsRootDescriptorTable(4, samplers->getGPUHandle(samplerType)); //sampler de momento 0, haremos q con imgui pueda cambiar el sampler
 
 	Matrix mvp = (modelMatrix * viewMatrix * projMatrix).Transpose();
 	commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / sizeof(UINT32), &mvp, 0);
+
+	commandList->SetGraphicsRootConstantBufferView(1, ringBuffer->AllocBuffer(&perFrame, alignUp(sizeof(perFrame), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT)));
 
 	model->draw(commandList);
 
@@ -103,17 +117,17 @@ void ModuleExercise5::render()
 	}*/
 }
 
-void ModuleExercise5::postRender()
+void ModuleExercise6::postRender()
 {
 
 }
 
-void ModuleExercise5::setSampler(ModuleSampler::Type type)
+void ModuleExercise6::setSampler(ModuleSampler::Type type)
 {
 	samplerType = type;
 }
 
-bool ModuleExercise5::createVertexBuffer()
+bool ModuleExercise6::createVertexBuffer()
 {
 	struct Vertex
 	{
@@ -129,18 +143,18 @@ bool ModuleExercise5::createVertexBuffer()
 		{ Vector3(1.0f, 1.0f, 0.0f), Vector2(1.2f, -0.2f) },
 		{ Vector3(1.0f, -1.0f, 0.0f), Vector2(1.2f, 1.2f) }
 	};
-	vertexBuffer = resources->createDefaultBuffer(vertices, sizeof(vertices), "Exercise5");
+	vertexBuffer = resources->createDefaultBuffer(vertices, sizeof(vertices), "Exercise6");
 	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
 	vertexBufferView.SizeInBytes = sizeof(vertices);
 	vertexBufferView.StrideInBytes = sizeof(Vertex);
 	return true;
 }
 
-bool ModuleExercise5::createRootSignature()
+bool ModuleExercise6::createRootSignature()
 {
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
 
-	CD3DX12_ROOT_PARAMETER rootParameters[4] = {};
+	CD3DX12_ROOT_PARAMETER rootParameters[5] = {};
 	CD3DX12_DESCRIPTOR_RANGE tableRanges;
 	CD3DX12_DESCRIPTOR_RANGE sampRange;
 
@@ -148,10 +162,11 @@ bool ModuleExercise5::createRootSignature()
 	sampRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 4, 0);
 
 	rootParameters[0].InitAsConstants((sizeof(Matrix) / sizeof(UINT32)), 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
-	rootParameters[1].InitAsConstantBufferView(1, 0, D3D12_SHADER_VISIBILITY_PIXEL);
-	rootParameters[2].InitAsDescriptorTable(1, &tableRanges, D3D12_SHADER_VISIBILITY_PIXEL);
-	rootParameters[3].InitAsDescriptorTable(1, &sampRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	rootSignatureDesc.Init(4, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	rootParameters[1].InitAsConstantBufferView(1, 0, D3D12_SHADER_VISIBILITY_ALL);
+	rootParameters[2].InitAsConstantBufferView(2, 0, D3D12_SHADER_VISIBILITY_ALL);
+	rootParameters[3].InitAsDescriptorTable(1, &tableRanges, D3D12_SHADER_VISIBILITY_PIXEL);
+	rootParameters[4].InitAsDescriptorTable(1, &sampRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	rootSignatureDesc.Init(5, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 	ComPtr<ID3DBlob> blob;
 	if (FAILED(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &blob, nullptr))) return false;
@@ -160,22 +175,23 @@ bool ModuleExercise5::createRootSignature()
 	return true;
 }
 
-bool ModuleExercise5::createPSO()
+bool ModuleExercise6::createPSO()
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 	psoDesc.pRootSignature = rootSignature.Get();
 	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 
-	auto dataVS = DX::ReadData(L"Exercise5VS.cso");
-	auto dataPS = DX::ReadData(L"Exercise5PS.cso");
+	auto dataVS = DX::ReadData(L"Exercise6VS.cso");
+	auto dataPS = DX::ReadData(L"Exercise6PS.cso");
 	psoDesc.VS = { dataVS.data(), dataVS.size() };
 	psoDesc.PS = { dataPS.data(), dataPS.size() };
 
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
 	{
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
 	};
 	psoDesc.InputLayout = { inputLayout, sizeof(inputLayout) / sizeof(D3D12_INPUT_ELEMENT_DESC) };
 
@@ -194,10 +210,10 @@ bool ModuleExercise5::createPSO()
 	return true;
 }
 
-bool ModuleExercise5::loadModel()
+bool ModuleExercise6::loadModel()
 {
 	model = new Model();
-	model->load("../Game/Assets/Models/Duck/Duck.gltf", "../Game/Assets/Models/Duck/", Material::MaterialType::Basic);
+	model->load("../Game/Assets/Models/Duck/Duck.gltf", "../Game/Assets/Models/Duck/", Material::Phong);
 
 	//materialBuffer = resources->createDefaultBuffer(materialData, alignUp(sizeof(MaterialData), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT));
 

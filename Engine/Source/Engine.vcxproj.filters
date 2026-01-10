@@ -33,6 +33,7 @@
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="ModuleExercise5.cpp" />
     <ClCompile Include="ModuleRingBuffer.cpp" />
+    <ClCompile Include="ModuleExercise6.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="3rdParty\imgui-docking\backends\imgui_impl_dx12.h" />
@@ -72,6 +73,7 @@
     <ClInclude Include="Material.h" />
     <ClInclude Include="ModuleExercise5.h" />
     <ClInclude Include="ModuleRingBuffer.h" />
+    <ClInclude Include="ModuleExercise6.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Engine.rc" />
@@ -82,6 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleMath.inl" />
+    <None Include="Exercise6.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Exercise2VS.hlsl" />
@@ -92,5 +95,7 @@
     <FxCompile Include="Exercise4VS.hlsl" />
     <FxCompile Include="Exercise5PS.hlsl" />
     <FxCompile Include="Exercise5VS.hlsl" />
+    <FxCompile Include="Exercise6VS.hlsl" />
+    <FxCompile Include="Exercise6PS.hlsl" />
   </ItemGroup>
 </Project>

@@ -10,12 +10,25 @@
 #include "Mesh.h"
 #include "Material.h"
 #include "ModuleShaderDescriptors.h"
+#include "ModuleRingBuffer.h"
 
 #define SCALE_FACTOR 0.01f
+
+struct PerInstance
+{
+	Matrix modelMat;
+	Matrix normalMat;
+	PhongMaterialData material;
+};
 
 Model::Model()
 {
 	modelMatrix = Matrix::Identity * Matrix::CreateScale(SCALE_FACTOR);
+
+	normalMatrix = modelMatrix;
+	normalMatrix.Translation(Vector3::Zero);
+	normalMatrix.Invert();
+	normalMatrix.Transpose();
 }
 
 Model::~Model()
@@ -24,7 +37,7 @@ Model::~Model()
 	for (Material* material : materials) delete material;
 }
 
-bool Model::load(const char* assetFileName, const char* basePath)
+bool Model::load(const char* assetFileName, const char* basePath, Material::MaterialType type)
 {
 	tinygltf::TinyGLTF gltfContext;
 	tinygltf::Model model;
@@ -46,7 +59,7 @@ bool Model::load(const char* assetFileName, const char* basePath)
 		for(const auto& modelMaterial : model.materials)
 		{
 			// Process each material and create Material objects
-			Material* material = new Material();
+			Material* material = new Material(type);
 			material->load(model, modelMaterial, basePath, materialBuffers); //assetfilename tiene q cambiar pq es otro file
 			materials.push_back(material);
 		}
@@ -64,9 +77,12 @@ void Model::draw(ID3D12GraphicsCommandList* commandList) const
 		if(UINT(mesh->getMaterialIndex()) < materials.size())
 		{
 			const Material* material = materials[mesh->getMaterialIndex()];
+
+			PerInstance perInstance = { modelMatrix.Transpose(), normalMatrix.Transpose(), material->getPhongMaterial() };//esto solo sirve para el ejercicio 6, habra que cambiarlo
 			
-			commandList->SetGraphicsRootConstantBufferView(1, materialBuffers[mesh->getMaterialIndex()]->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootDescriptorTable(2, material->getDescriptors()->getGPUHandle(0)); //0 pq es el indice 0 el q tiene el material
+			//commandList->SetGraphicsRootConstantBufferView(1, materialBuffers[mesh->getMaterialIndex()]->GetGPUVirtualAddress()); no sirve a partir del ejercicio 6, habra que cambiarlo
+			commandList->SetGraphicsRootConstantBufferView(2, app->getRingBuffer()->AllocBuffer(&perInstance, alignUp(sizeof(perInstance), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT)));
+			commandList->SetGraphicsRootDescriptorTable(3, material->getDescriptors()->getGPUHandle(0)); //0 pq es el indice 0 el q tiene el material
 
 			mesh->draw(commandList);
 		}

@@ -5,7 +5,8 @@
 
 class ImGuiPass;
 
-namespace ImGuizmo {
+namespace ImGuizmo 
+{
 	enum OPERATION;
 }
 
