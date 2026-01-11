@@ -21,12 +21,15 @@ public:
 
 	ID3D12Device5* getDevice() const { return device.Get(); }
 	ID3D12GraphicsCommandList* getCommandList() const { return commandList.Get(); }
-	ID3D12CommandAllocator* getCommandAllocator() const { return commandAllocators[frameIndex].Get(); }
+	ID3D12CommandAllocator* getCommandAllocator() const { return commandAllocators[currentBackBufferIndex].Get(); }
 	ID3D12CommandQueue* getCommandQueue() const { return commandQueue.Get(); }
-	ID3D12Resource* getCurrentBackBuffer() const { return renderTargets[frameIndex].Get(); }
-	UINT getCurrentBackBufferIndex() const { return frameIndex; }
-	CD3DX12_CPU_DESCRIPTOR_HANDLE getCurrentRtv() const { CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorIncrementSize); return rtvHandle; }
+	ID3D12Resource* getCurrentBackBuffer() const { return renderTargets[currentBackBufferIndex].Get(); }
+	UINT getCurrentBackBufferIndex() const { return currentBackBufferIndex; }
+	CD3DX12_CPU_DESCRIPTOR_HANDLE getCurrentRtv() const { CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), currentBackBufferIndex, rtvDescriptorIncrementSize); return rtvHandle; }
 	CD3DX12_CPU_DESCRIPTOR_HANDLE getDsv() const { CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsvHeap->GetCPUDescriptorHandleForHeapStart()); return dsvHandle; }
+
+	unsigned getCurrentFrame() const { return frameIndex; }
+	unsigned getLastCompletedFrame() const { return lastCompletedFrame; }
 private:
 	static const UINT FrameCount = 2; //N buffers
 	
@@ -68,8 +71,12 @@ private:
 	UINT windowWidth = 0;
 	UINT windowHeight = 0;
 	UINT rtvDescriptorIncrementSize;
-	UINT frameIndex;
+	UINT currentBackBufferIndex;
 	UINT64 fenceValues[FrameCount];
 	UINT64 currentFenceValue;
+
+	unsigned frameValues[FrameCount] = { 0, 0 };
+	unsigned frameIndex = 0;
+	unsigned lastCompletedFrame = 0;
 	//UINT64 fenceCounter;
 };

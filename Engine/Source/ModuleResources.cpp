@@ -104,20 +104,23 @@ ComPtr<ID3D12Resource> ModuleResources::createDefaultBuffer(const void* data, si
 	return buffer;
 }
 
-ComPtr<ID3D12Resource> ModuleResources::createDepthStencil(size_t width, size_t height, const char* name)
+ComPtr<ID3D12Resource> ModuleResources::createDepthStencil(size_t width, size_t height, DXGI_FORMAT format, const float clearDepth, const uint8_t clearStencil, const char* name)
 {
 	ComPtr<ID3D12Resource> texture;
 	CD3DX12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-	CD3DX12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+	CD3DX12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Tex2D(format, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
 
 	D3D12_CLEAR_VALUE clearValue = {};
-	clearValue.Format = DXGI_FORMAT_D32_FLOAT;
-	clearValue.DepthStencil.Depth = 1.0f;
-	clearValue.DepthStencil.Stencil = 0;
+	clearValue.Format = format;
+	clearValue.DepthStencil.Depth = clearDepth;
+	clearValue.DepthStencil.Stencil = clearStencil;
 
 	//CORREGIR: no podemos hacer device.get() pq aun no está inicializado este modulo. o hacemos un post init en moduled3d12 y llamamos a createdepthstencil o usamos el app->...
 	//device.Get()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &clearValue, IID_PPV_ARGS(&texture));
 	app->getD3D12()->getDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &clearValue, IID_PPV_ARGS(&texture));
+
+	texture->SetName(std::wstring(name, name + strlen(name)).c_str());
+
 	return texture;
 }
 
@@ -181,5 +184,58 @@ ComPtr<ID3D12Resource> ModuleResources::createTextureFromFile(const std::filesys
 
 	//texture->SetName(std::wstring(name, name + strlen(name)).c_str());
 	return texture;
+}
+
+ComPtr<ID3D12Resource> ModuleResources::createRenderTargetTexture(size_t width, size_t height, DXGI_FORMAT format, const Vector4& clearColour, const char* name)
+{
+	ComPtr<ID3D12Resource> texture;
+	CD3DX12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Tex2D(format, (UINT64)(width), (UINT)(height), 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET); //
+	
+	D3D12_CLEAR_VALUE clearValue = { format , { clearColour.x, clearColour.y, clearColour.z, clearColour.w } }; //necesario para rtt
+
+	device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES, & desc, D3D12_RESOURCE_STATE_COMMON, &clearValue, IID_PPV_ARGS(&texture));
+
+	texture->SetName(std::wstring(name, name + strlen(name)).c_str());
+
+	return texture;
+}
+
+void ModuleResources::preRender()
+{
+	UINT completedFrame = app->getD3D12()->getLastCompletedFrame();
+
+	for (int i = 0; i < m_deferredReleases.size(); ++i)
+	{
+		if (completedFrame >= m_deferredReleases[i].frameIndex)
+		{
+			m_deferredReleases[i] = m_deferredReleases.back();
+			m_deferredReleases.pop_back();
+		}
+		else
+		{
+			++i;
+		}
+	}
+}
+
+void ModuleResources::deferRelease(ComPtr<ID3D12Resource> resource)
+{
+	if (resource)
+	{
+		UINT currentFrame = app->getD3D12()->getLastCompletedFrame();
+
+		auto it = std::find_if(m_deferredReleases.begin(), m_deferredReleases.end(), [resource](const DeferredRelease& item) -> bool
+			{ return item.resource.Get() == resource.Get(); });
+
+		if (it != m_deferredReleases.end())
+		{
+			it->frameIndex = currentFrame;
+		}
+		else
+		{
+			m_deferredReleases.push_back({ resource, currentFrame });
+		}
+	}
 }
 

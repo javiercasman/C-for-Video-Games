@@ -12,12 +12,15 @@ class ModuleEditor;
 class ModuleResources;
 class ModuleCamera;
 class ModuleShaderDescriptors;
+class ModuleRTDescriptors;
+class ModuleDSDescriptors;
 class ModuleSampler;
 class ModuleExercise2;
 class ModuleExercise3;
 class ModuleExercise4;
 class ModuleExercise5;
 class ModuleExercise6;
+class ModuleExercise7;
 class ModuleRingBuffer;
 
 class Application
@@ -37,12 +40,15 @@ public:
     ModuleResources*            getResources() { return resources; }
     ModuleCamera*               getCamera() { return camera; }
 	ModuleShaderDescriptors*    getShaderDescriptors() { return shaderDescriptors; }
+	ModuleRTDescriptors*        getRTDescriptors() { return rtDescriptors; }
+	ModuleDSDescriptors*        getDSDescriptors() { return dsDescriptors; }
 	ModuleSampler*              getSampler() { return sampler; }
 	ModuleRingBuffer*           getRingBuffer() { return ringBuffer; }
     
     //ModuleExercise4*            getCurrentExercise() { return exercise4; }
     //ModuleExercise5*            getCurrentExercise() { return exercise5; }
-    ModuleExercise6*            getCurrentExercise() { return exercise6; }
+    //ModuleExercise6*            getCurrentExercise() { return exercise6; }
+    ModuleExercise7*            getCurrentExercise() { return exercise7; }
 
     float                       getFPS() const { return 1000.0f * float(MAX_FPS_TICKS) / tickSum; }
     float                       getAvgElapsedMs() const { return tickSum / float(MAX_FPS_TICKS); }
@@ -67,12 +73,15 @@ private:
     ModuleResources* resources = nullptr;
     ModuleCamera* camera = nullptr;
 	ModuleShaderDescriptors* shaderDescriptors = nullptr;
+	ModuleRTDescriptors* rtDescriptors = nullptr;
+	ModuleDSDescriptors* dsDescriptors = nullptr;
 	ModuleSampler* sampler = nullptr;
 	ModuleExercise2* exercise2 = nullptr;
 	ModuleExercise3* exercise3 = nullptr;
 	ModuleExercise4* exercise4 = nullptr;
 	ModuleExercise5* exercise5 = nullptr;
 	ModuleExercise6* exercise6 = nullptr;
+	ModuleExercise7* exercise7 = nullptr;
 	ModuleRingBuffer* ringBuffer = nullptr;
 
     uint64_t  lastMilis = 0;

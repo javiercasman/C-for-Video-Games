@@ -23,5 +23,5 @@ private:
 
 	UINT head;
 	UINT tail;
-	UINT currentFrame;
+	UINT currentBackBufferIndex;
 };

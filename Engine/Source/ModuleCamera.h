@@ -13,7 +13,7 @@ public:
 	void setFOV(const float newFOV); //Set the horizontal FOV keeping the aspect ratio
 	void setNear(const float newNear); //Set the horizontal FOV keeping the aspect ratio
 	void setFar(const float newFar); //Set the horizontal FOV keeping the aspect ratio
-	void setAspectRatio(); //Change the vertical FOV to meet the new aspect ratio
+	void setAspectRatio(const float width, const float height); //Change the vertical FOV to meet the new aspect ratio
 	//void setPlaneDistance();
 	//void setPosition();
 	//void setOrientation();
@@ -24,6 +24,8 @@ public:
 	float getNear() const { return nearZ; }
 	float getFar() const { return farZ; }
 	Vector3 getPosition() const { return eye; }
+
+	static Matrix getPerspectiveProj(float aspect, float fov = XM_PIDIV4);
 
 private:
 	ModuleD3D12* d3d12;

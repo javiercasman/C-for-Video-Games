@@ -17,13 +17,23 @@ struct PhongMaterialData
 	BOOL	hasDiffuseTexture;
 };
 
+struct PBRPhongMaterialData
+{
+	XMFLOAT3 diffuseColour;
+	BOOL     hasDiffuseTex;
+
+	XMFLOAT3 specularColour;
+	float    shininess;
+};
+
 class Material
 {
 public:
 	enum MaterialType
 	{
 		Basic,
-		Phong
+		Phong,
+		PBRPhong
 	};
 
 public:
@@ -32,18 +42,21 @@ public:
 
 	void load(const tinygltf::Model& model, const tinygltf::Material& material, const char* basePath, std::vector<ComPtr<ID3D12Resource>> &materialBuffers);
 	const PhongMaterialData& getPhongMaterial() const { if (type == Phong) return materialData.phong; }
+	const PBRPhongMaterialData& getPBRMaterial() const { if (type == PBRPhong) return materialData.pbrPhong; }
 
 	ModuleShaderDescriptors* getDescriptors() const { return descriptors; }
 	MaterialType getMaterialType() const { return type; }
 	const std::string& getName() const { return name; }
 
 	void setPhongMaterial(const PhongMaterialData& phong) { if (type == Phong) materialData.phong = phong; }
+	void setPBRPhongMaterial(const PBRPhongMaterialData& pbr) { if (type == PBRPhong) materialData.pbrPhong = pbr; }
 
 private:
 	union
 	{
 		BasicMaterialData basic;
 		PhongMaterialData phong;
+		PBRPhongMaterialData pbrPhong;
 	} materialData;
 	std::string name;
 	MaterialType type;

@@ -55,6 +55,14 @@ void Material::load(const tinygltf::Model& model, const tinygltf::Material& mate
 		materialData.phong.hasDiffuseTexture = hasColourTex;
 	}
 
+	else if (type == PBRPhong)
+	{
+		materialData.pbrPhong.diffuseColour = XMFLOAT3(colour.x, colour.y, colour.z);
+		materialData.pbrPhong.hasDiffuseTex = hasColourTex;
+		materialData.pbrPhong.shininess = 64.0f;
+		materialData.pbrPhong.specularColour = XMFLOAT3(0.015f, 0.015f, 0.015f);
+	}
+
 	/* 
 	esto solo sirve para el ejercicio 5. como vamos por el 6, lo comento. habrá que hacer cambios para meter esto en el ej5 y que funcione bien. me gustaria tener un codigo mas sencillo, que solo seleccionando el ejercicio funcione todo.0
 	materialBuffers.push_back(app->getResources()->createDefaultBuffer(&materialData, alignUp(sizeof(MaterialData), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT), "Material Buffer")); //cambiar por ring buffer, ahora entiendo por que no lo hace aqui sino en el module exercise

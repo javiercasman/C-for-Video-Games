@@ -190,12 +190,12 @@ void ModuleCamera::setFar(const float newFar)
 	proj = Matrix::CreatePerspectiveFieldOfView(fovh, aspect, nearZ, farZ);
 }
 
-void ModuleCamera::setAspectRatio()
+void ModuleCamera::setAspectRatio(const float width, const float height)
 {
-	app->getD3D12()->getWindowSize(windowWidth, windowHeight);
-	aspect = float(windowWidth) / (windowHeight);
+	aspect = width / height;
 	proj = Matrix::CreatePerspectiveFieldOfView(fovh, aspect, 0.1f, 1000.0f);
 }
+
 
 /*
 void ModuleCamera::setPlaneDistance()

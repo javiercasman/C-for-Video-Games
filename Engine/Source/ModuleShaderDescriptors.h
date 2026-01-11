@@ -8,10 +8,14 @@ public:
 	ModuleShaderDescriptors(ModuleD3D12* d3D12);
 
 	bool init();
+	//void preRender();
 	void createSRV(ID3D12Resource* texture, UINT srvIndex);
 	UINT createNullTexture2DSRV();
 	UINT allocDescriptor();
 	void reset();
+
+	void deferRelease(ID3D12Resource* resource, uint64_t frameNumber);
+	void collectGarbage(uint64_t lastCompletedFrame);
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE getCPUHandle(UINT index) const { return CD3DX12_CPU_DESCRIPTOR_HANDLE(cpuStart, index, srvDescriptorIncrementSize); };
 	CD3DX12_GPU_DESCRIPTOR_HANDLE getGPUHandle(UINT index) const { return CD3DX12_GPU_DESCRIPTOR_HANDLE(gpuStart, index, srvDescriptorIncrementSize); };
@@ -28,7 +32,7 @@ private:
 	//int nextFreeSlot;
 	UINT srvCount = 0;
 
-	D3D12_CPU_DESCRIPTOR_HANDLE cpuStart = {0};
+	D3D12_CPU_DESCRIPTOR_HANDLE cpuStart = {0}; //?
 	D3D12_GPU_DESCRIPTOR_HANDLE gpuStart = {0};
 
 	UINT srvDescriptorIncrementSize = 0;

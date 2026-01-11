@@ -94,8 +94,8 @@ D3D12_GPU_VIRTUAL_ADDRESS ModuleRingBuffer::AllocBuffer(const void* data, size_t
 
 void ModuleRingBuffer::preRender()
 {
-	currentFrame = d3d12->getCurrentBackBufferIndex();
-	tail = (tail + allocatedThisFrame[currentFrame]) % bufferSize;
-	totalAllocatedSize -= allocatedThisFrame[currentFrame];
-	allocatedThisFrame[currentFrame] = 0;
+	currentBackBufferIndex = d3d12->getCurrentBackBufferIndex();
+	tail = (tail + allocatedThisFrame[currentBackBufferIndex]) % bufferSize;
+	totalAllocatedSize -= allocatedThisFrame[currentBackBufferIndex];
+	allocatedThisFrame[currentBackBufferIndex] = 0;
 }

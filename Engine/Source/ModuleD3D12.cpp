@@ -4,7 +4,7 @@
 #include "ModuleCamera.h"
 #include "Application.h"
 
-ModuleD3D12::ModuleD3D12(HWND wnd) : hWnd(wnd), fenceValues{}, rtvDescriptorIncrementSize(0), frameIndex(0), fenceEvent(nullptr), currentFenceValue(0)
+ModuleD3D12::ModuleD3D12(HWND wnd) : hWnd(wnd), fenceValues{}, rtvDescriptorIncrementSize(0), currentBackBufferIndex(0), fenceEvent(nullptr), currentFenceValue(0)
 {
 }
 
@@ -28,7 +28,7 @@ bool ModuleD3D12::init()
 	ret = ret && createCommandList();
 	ret = ret && createDrawFence();
 
-	if(ret) frameIndex = swapChain->GetCurrentBackBufferIndex();
+	if(ret) currentBackBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
     return ret;
 }
@@ -49,22 +49,27 @@ void ModuleD3D12::update()
 void ModuleD3D12::preRender()
 {
 	//Wait for fence, Reset allocator for current back buffer.
-	frameIndex = swapChain->GetCurrentBackBufferIndex();
+	currentBackBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
 	//Esperar a que el CommandAllocator del frame actual esté libre (usando la fence).
-	if (Fence->GetCompletedValue() < fenceValues[frameIndex])
+	if (Fence->GetCompletedValue() < fenceValues[currentBackBufferIndex])
 	{
-		Fence->SetEventOnCompletion(fenceValues[frameIndex], fenceEvent);
+		Fence->SetEventOnCompletion(fenceValues[currentBackBufferIndex], fenceEvent);
 		WaitForSingleObject(fenceEvent, INFINITE);
+
+		lastCompletedFrame = std::max(lastCompletedFrame, frameValues[currentBackBufferIndex]);
 	}
+
+	frameIndex++;
+	frameValues[currentBackBufferIndex] = frameIndex;
 	//Llamar a Reset() en el CommandAllocator y en la CommandList.
-	//commandAllocators[frameIndex]->Reset();
-	//commandList->Reset(commandAllocators[frameIndex].Get(), nullptr);
+	//commandAllocators[currentBackBufferIndex]->Reset();
+	//commandList->Reset(commandAllocators[currentBackBufferIndex].Get(), nullptr);
 }
 
 void ModuleD3D12::postRender()
 {
-	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[currentBackBufferIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	commandList->ResourceBarrier(1, &barrier);
 	commandList->Close();
 
@@ -74,22 +79,22 @@ void ModuleD3D12::postRender()
 
 	swapChain->Present(1, 0);
 	
-	currentFenceValue = fenceValues[frameIndex] + 1;
+	currentFenceValue = fenceValues[currentBackBufferIndex] + 1;
 	commandQueue->Signal(Fence.Get(), currentFenceValue);
-	fenceValues[frameIndex] = currentFenceValue;
+	fenceValues[currentBackBufferIndex] = currentFenceValue;
 
-	frameIndex = swapChain->GetCurrentBackBufferIndex();
+	currentBackBufferIndex = swapChain->GetCurrentBackBufferIndex();
 }
 
 void ModuleD3D12::render()
 {
 	/*
 	//Transicionar el back buffer desde PRESENT --> RENDER_TARGET con un ResourceBarrier.
-	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[currentBackBufferIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	commandList->ResourceBarrier(1, &barrier);
 
 	//Configurar el Render Target View (RTV) para ese back buffer.
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorIncrementSize);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), currentBackBufferIndex, rtvDescriptorIncrementSize);
 	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
 	//const float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
@@ -184,7 +189,7 @@ bool ModuleD3D12::createSwapChain()
 	if (FAILED(factory->CreateSwapChainForHwnd(commandQueue.Get(), hWnd, &swapChainDesc, nullptr, nullptr, &swapChain1))) return false;
 
 	if (FAILED(swapChain1.As(&swapChain))) return false; //QueryInterface
-	frameIndex = swapChain->GetCurrentBackBufferIndex();
+	currentBackBufferIndex = swapChain->GetCurrentBackBufferIndex();
 	return true;
 }
 
@@ -209,7 +214,10 @@ bool ModuleD3D12::createRenderTargets()
 
 bool ModuleD3D12::createDepthStencil()
 {
-	depthStencil = app->getResources()->createDepthStencil(windowWidth, windowHeight, "Depth");
+	DXGI_FORMAT format = DXGI_FORMAT_D32_FLOAT;
+	float clearDepth = 1.0f;
+	uint8_t clearStencil = 0;
+	depthStencil = app->getResources()->createDepthStencil(windowWidth, windowHeight, format, clearDepth, clearStencil, "Depth");
 
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
 	dsvHeapDesc.NumDescriptors = 1;
@@ -230,15 +238,15 @@ bool ModuleD3D12::createCommandList()
 		if (FAILED(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocators[i])))) return false;
 	}
 
-	if (FAILED(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocators[frameIndex].Get(), nullptr, IID_PPV_ARGS(&commandList)))) return false;
+	if (FAILED(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocators[currentBackBufferIndex].Get(), nullptr, IID_PPV_ARGS(&commandList)))) return false;
 	if (FAILED(commandList->Close())) return false;
 	return true;
 }
 
 bool ModuleD3D12::createDrawFence()
 {
-	if (FAILED(device->CreateFence(fenceValues[frameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)))) return false;
-	fenceValues[frameIndex]++;
+	if (FAILED(device->CreateFence(fenceValues[currentBackBufferIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)))) return false;
+	fenceValues[currentBackBufferIndex]++;
 
 	fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 	if (fenceEvent == nullptr)
@@ -260,7 +268,7 @@ bool ModuleD3D12::resize()
 	unsigned width, height;
 	getWindowSize(width, height);
 
-	app->getCamera()->setAspectRatio();
+	app->getCamera()->setAspectRatio(width, height);
 
 	if (width != windowWidth || height != windowHeight)
 	{
@@ -299,7 +307,10 @@ bool ModuleD3D12::resize()
 			}
 			//ok = ok && createDepthStencil();
 
-			depthStencil = app->getResources()->createDepthStencil(windowWidth, windowHeight, "Depth");
+			DXGI_FORMAT format = DXGI_FORMAT_D32_FLOAT;
+			float clearDepth = 1.0f;
+			uint8_t clearStencil = 0;
+			depthStencil = app->getResources()->createDepthStencil(windowWidth, windowHeight, format, clearDepth, clearStencil, "Depth");
 
 			D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
 			dsvHeapDesc.NumDescriptors = 1;

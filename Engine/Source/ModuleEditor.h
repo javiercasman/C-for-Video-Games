@@ -4,6 +4,7 @@
 #include <deque>
 
 class ImGuiPass;
+class RenderTexture;
 struct Light;
 
 namespace ImGuizmo 
@@ -26,6 +27,8 @@ public:
 
 	void addLog(const char* msg);
 	void addFramerate();
+
+	void exercise7GUI();
 private:
 	HWND hWnd = NULL;
 	ModuleD3D12* d3d12 = nullptr;
@@ -56,10 +59,15 @@ private:
 
 	ImGuizmo::OPERATION gizmoOperation;
 
+	ImVec2 canvasPos;
+	RenderTexture* renderTexture;
+
 	void exercise2GUI();
 	void exercise3GUI();
 	void exercise4GUI();
 	void exercise5GUI();
 	void exercise6GUI();
+
+	void renderToTexture();
 };
 

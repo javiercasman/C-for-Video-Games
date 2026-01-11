@@ -9,8 +9,11 @@
 #include "ModuleExercise4.h"
 #include "ModuleExercise5.h"
 #include "ModuleExercise6.h"
+#include "ModuleExercise7.h"
 #include "ModuleCamera.h"
 #include "ModuleShaderDescriptors.h"
+#include "ModuleRTDescriptors.h"
+#include "ModuleDSDescriptors.h"
 #include "ModuleSampler.h"
 #include "ModuleRingBuffer.h"
 
@@ -23,6 +26,8 @@ Application::Application(int argc, wchar_t** argv, void* hWnd)
     modules.push_back(camera = new ModuleCamera(d3d12));
     modules.push_back(resources = new ModuleResources(d3d12));
     modules.push_back(shaderDescriptors = new ModuleShaderDescriptors(d3d12));
+	modules.push_back(rtDescriptors = new ModuleRTDescriptors(d3d12));
+	modules.push_back(dsDescriptors = new ModuleDSDescriptors(d3d12));
     modules.push_back(sampler = new ModuleSampler(d3d12));
 	modules.push_back(ringBuffer = new ModuleRingBuffer(d3d12, resources));
     modules.push_back(exercise2 = new ModuleExercise2(d3d12)); ++exerciseCount;
@@ -30,10 +35,11 @@ Application::Application(int argc, wchar_t** argv, void* hWnd)
 	modules.push_back(exercise4 = new ModuleExercise4(d3d12, camera)); ++exerciseCount;
 	modules.push_back(exercise5 = new ModuleExercise5(d3d12, camera)); ++exerciseCount;
 	modules.push_back(exercise6 = new ModuleExercise6(d3d12, camera, ringBuffer)); ++exerciseCount;
+	modules.push_back(exercise7 = new ModuleExercise7(d3d12, camera, ringBuffer)); ++exerciseCount;
     modules.push_back(editor = new ModuleEditor((HWND)hWnd, d3d12)); //ModuleEditor no funciona por si solo. tiene que ir despues de un modulo q renderize (los ejercicios)
 
-	exercise6->setIsExercise6(true);
-	currentExerciseIndex = 4;
+	exercise7->setIsExercise7(true);
+	currentExerciseIndex = 5;
 }
 
 Application::~Application()
@@ -120,6 +126,7 @@ void Application::setCurrentExercise(int exerciseIndex)
         case 4: exercise4->setIsExercise4(false); break;
         case 5: exercise5->setIsExercise5(false); break;
         case 6: exercise6->setIsExercise6(false); break;
+		case 7: exercise7->setIsExercise7(false); break;
 	}
     currentExerciseIndex = exerciseIndex;
     switch (currentExerciseIndex)
@@ -129,6 +136,7 @@ void Application::setCurrentExercise(int exerciseIndex)
         case 4: exercise4->setIsExercise4(true); break;
         case 5: exercise5->setIsExercise5(true); break;
         case 6: exercise6->setIsExercise6(true); break;
+		case 7: exercise7->setIsExercise7(true); break;
     }
 }
 
