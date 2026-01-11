@@ -214,7 +214,7 @@ bool ModuleExercise6::createPSO()
 bool ModuleExercise6::loadModel()
 {
 	model = new Model();
-	model->load("Assets/Models/Duck/Duck.gltf", "Assets/Models/Duck/", Material::Phong);
+	model->load("../Game/Assets/Models/Duck/Duck.gltf", "../Game/Assets/Models/Duck/", Material::Phong);
 
 	//materialBuffer = resources->createDefaultBuffer(materialData, alignUp(sizeof(MaterialData), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT));
 

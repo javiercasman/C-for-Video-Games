@@ -124,7 +124,6 @@ bool Application::cleanUp()
 
 void Application::setCurrentExercise(int exerciseIndex)
 {
-    
     if (exerciseIndex < 0 || exerciseIndex >= exerciseCount || exerciseIndex == currentExerciseIndex) return;
     switch(currentExerciseIndex)
     {
