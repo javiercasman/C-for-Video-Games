@@ -28,6 +28,11 @@ public:
 	void addLog(const char* msg);
 	void addFramerate();
 
+	void exercise2GUI();
+	void exercise3GUI();
+	void exercise4GUI();
+	void exercise5GUI();
+	void exercise6GUI();
 	void exercise7GUI();
 private:
 	HWND hWnd = NULL;
@@ -61,12 +66,6 @@ private:
 
 	ImVec2 canvasPos;
 	RenderTexture* renderTexture;
-
-	void exercise2GUI();
-	void exercise3GUI();
-	void exercise4GUI();
-	void exercise5GUI();
-	void exercise6GUI();
 
 	void renderToTexture();
 };

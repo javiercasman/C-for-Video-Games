@@ -10,6 +10,7 @@
 #include "ModuleShaderDescriptors.h"
 #include "ModuleSampler.h"
 #include "Model.h"
+#include "ModuleEditor.h"
 
 ModuleExercise5::ModuleExercise5(ModuleD3D12* d3D12, ModuleCamera* Camera) : d3d12(d3D12), camera(Camera)
 {
@@ -43,6 +44,8 @@ void ModuleExercise5::render()
 	commandAllocator = d3d12->getCommandAllocator();
 	//reset commandallocator
 	commandList->Reset(commandAllocator, pso.Get());
+
+	app->getEditor()->exercise5GUI();
 
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(d3d12->getCurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	commandList->ResourceBarrier(1, &barrier);
@@ -90,10 +93,6 @@ void ModuleExercise5::render()
 	commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / sizeof(UINT32), &mvp, 0);
 
 	model->draw(commandList);
-
-	if (showGrid) dd::xzSquareGrid(-10.0f, 10.0f, 0.0f, 1.0f, dd::colors::LightGray); // Grid plane
-	if (showAxis) dd::axisTriad(ddConvert(Matrix::Identity), 0.1f, 1.0f); // XYZ axis
-	debugDraw->record(commandList, windowWidth, windowHeight, viewMatrix, projMatrix);
 
 	/*barrier = CD3DX12_RESOURCE_BARRIER::Transition(d3d12->getCurrentBackBuffer().Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	commandList->ResourceBarrier(1, &barrier);

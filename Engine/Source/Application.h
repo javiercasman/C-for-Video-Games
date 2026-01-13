@@ -45,15 +45,16 @@ public:
 	ModuleSampler*              getSampler() { return sampler; }
 	ModuleRingBuffer*           getRingBuffer() { return ringBuffer; }
     
-    //ModuleExercise4*            getCurrentExercise() { return exercise4; }
-    //ModuleExercise5*            getCurrentExercise() { return exercise5; }
-    //ModuleExercise6*            getCurrentExercise() { return exercise6; }
-    ModuleExercise7*            getCurrentExercise() { return exercise7; }
+    ModuleExercise4*            getExercise4() { return exercise4; }
+    ModuleExercise5*            getExercise5() { return exercise5; }
+    ModuleExercise6*            getExercise6() { return exercise6; }
+    ModuleExercise7*            getExercise7() { return exercise7; }
 
     float                       getFPS() const { return 1000.0f * float(MAX_FPS_TICKS) / tickSum; }
     float                       getAvgElapsedMs() const { return tickSum / float(MAX_FPS_TICKS); }
     uint64_t                    getElapsedMilis() const { return elapsedMilis; }
 
+	int     	                getCurrentExerciseIndex() const { return currentExerciseIndex; }   
     int 					    getExerciseCount() const { return exerciseCount; }
 
     bool                        isPaused() const { return paused; }
@@ -81,7 +82,7 @@ private:
 	ModuleExercise4* exercise4 = nullptr;
 	ModuleExercise5* exercise5 = nullptr;
 	ModuleExercise6* exercise6 = nullptr;
-	ModuleExercise7* exercise7 = nullptr;
+	ModuleExercise7* exercise7 = nullptr; //hacer punteros Module* ?
 	ModuleRingBuffer* ringBuffer = nullptr;
 
     uint64_t  lastMilis = 0;

@@ -52,7 +52,7 @@ bool ModuleEditor::postInit()
 
 	samplerType = int(ModuleSampler::LINEAR_WRAP);
 
-	renderTexture = app->getCurrentExercise()->getRenderTexture();
+	renderTexture = app->getExercise7()->getRenderTexture(); //lo mismo. ahora pq tenemos el 7, pero esto habria q llamarlo depende del ejercicio
 
 	return true;
 }
@@ -254,7 +254,7 @@ void ModuleEditor::exercise4GUI()
 
 	if (ImGui::Combo("Type", &samplerType, samplerNames, ModuleSampler::COUNT))
 	{
-		app->getCurrentExercise()->setSampler(ModuleSampler::Type(samplerType));
+		app->getExercise4()->setSampler(ModuleSampler::Type(samplerType));
 	}
 
 	ImGui::End();
@@ -263,23 +263,84 @@ void ModuleEditor::exercise4GUI()
 
 	if (ImGui::Checkbox("Show Axis", &axisOn))
 	{
-		app->getCurrentExercise()->setShowAxis(axisOn);
+		app->getExercise4()->setShowAxis(axisOn);
 	}
 	if (ImGui::Checkbox("Show Grid", &gridOn))
 	{
-		app->getCurrentExercise()->setShowGrid(gridOn);
+		app->getExercise4()->setShowGrid(gridOn);
 	}
 }
 
 void ModuleEditor::exercise5GUI()
 {
-	exercise4GUI();
-	if (ImGui::Checkbox("Show Guizmo", &guizmoOn))
+	ImGui::Begin("Console");
+	if (ImGui::Button("Clear")) logBuffer.clear();
+	ImGui::Separator();
+	for (const auto& line : logBuffer) ImGui::TextUnformatted(line.c_str());
+	if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) ImGui::SetScrollHereY(1.0f);
+	ImGui::End();
+
+	ImGui::Begin("Performance");
+	addFramerate();
+	char title[25];
+	sprintf_s(title, 25, "Framerate %.1f", fps_log[fps_log.size() - 1]);
+	ImGui::PlotHistogram("##framerate", getHistogramValue, &fps_log, fps_log.size(), 0, title, 0.0f, 100.0f, ImVec2(310, 100));
+	sprintf_s(title, 25, "Milliseconds %0.1f", ms_log[ms_log.size() - 1]);
+	ImGui::PlotHistogram("##milliseconds", getHistogramValue, &ms_log, ms_log.size(), 0, title, 0.0f, 40.0f, ImVec2(310, 100));
+	ImGui::End();
+
+	ImGui::Begin("Camera parameters");
+
+	if (ImGui::DragFloat("FOV", &fov, 0.01f, 0.2f, 2.5f))
 	{
-		app->getCurrentExercise()->setShowGuizmo(guizmoOn);
+		app->getCamera()->setFOV(fov);
 	}
 
-	Matrix objectMatrix = app->getCurrentExercise()->getModel()->getModelMatrix();
+	if (ImGui::DragFloat("Near Z", &nearZ, 0.01f, 0.01f, farZ - 0.01f))
+	{
+		app->getCamera()->setNear(nearZ);
+	}
+
+	if (ImGui::DragFloat("Far Z", &farZ, 1.0f, nearZ + 0.01f, 100.0f))
+	{
+		app->getCamera()->setFar(farZ);
+	}
+
+	ImGui::End();
+
+	ImGui::Begin("Sampler");
+
+	static const char* samplerNames[] =
+	{
+		"Linear / Wrap",
+		"Point / Wrap",
+		"Linear / Clamp",
+		"Point / Clamp"
+	};
+
+	if (ImGui::Combo("Type", &samplerType, samplerNames, ModuleSampler::COUNT))
+	{
+		app->getExercise5()->setSampler(ModuleSampler::Type(samplerType));
+	}
+
+	ImGui::End();
+
+	ImGui::Begin("Debug");
+
+	if (ImGui::Checkbox("Show Axis", &axisOn))
+	{
+		app->getExercise5()->setShowAxis(axisOn);
+	}
+	if (ImGui::Checkbox("Show Grid", &gridOn))
+	{
+		app->getExercise5()->setShowGrid(gridOn);
+	}
+	if (ImGui::Checkbox("Show Guizmo", &guizmoOn))
+	{
+		app->getExercise5()->setShowGuizmo(guizmoOn);
+	}
+
+	Matrix objectMatrix = app->getExercise5()->getModel()->getModelMatrix();
 
 	static ImGuizmo::OPERATION gizmoOperation = ImGuizmo::TRANSLATE;
 	if (ImGui::IsKeyPressed(ImGuiKey_W)) gizmoOperation = ImGuizmo::TRANSLATE;
@@ -302,12 +363,11 @@ void ModuleEditor::exercise5GUI()
 	{
 		ImGuizmo::RecomposeMatrixFromComponents(translation, rotation, scale, (float*)&objectMatrix);
 
-		app->getCurrentExercise()->getModel()->setModelMatrix(objectMatrix);
+		app->getExercise5()->getModel()->setModelMatrix(objectMatrix);
 	}
 
 	ImGui::End();
 
-	/*
 	if (guizmoOn)
 	{
 		const Matrix& viewMatrix = app->getCamera()->getViewMatrix();
@@ -320,18 +380,126 @@ void ModuleEditor::exercise5GUI()
 	if (ImGuizmo::IsUsing())
 	{
 		//no entra
-		app->getCurrentExercise()->getModel()->setModelMatrix(objectMatrix);
-	}*/
-	/**
+		app->getExercise5()->getModel()->setModelMatrix(objectMatrix);
+	}
+	/*
 	Interfiere con ejercicio 7. se comenta. habra que mejorar en un futuro para hacerlo mas ordenado y que pueda usarse en todos los ejercicios
 	*/
 }
 
 void ModuleEditor::exercise6GUI()
-{/*
-	exercise5GUI();
+{
+	ImGui::Begin("Console");
+	if (ImGui::Button("Clear")) logBuffer.clear();
+	ImGui::Separator();
+	for (const auto& line : logBuffer) ImGui::TextUnformatted(line.c_str());
+	if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) ImGui::SetScrollHereY(1.0f);
+	ImGui::End();
 
-	ModuleExercise6::Light& light = app->getCurrentExercise()->getLight();
+	ImGui::Begin("Performance");
+	addFramerate();
+	char title[25];
+	sprintf_s(title, 25, "Framerate %.1f", fps_log[fps_log.size() - 1]);
+	ImGui::PlotHistogram("##framerate", getHistogramValue, &fps_log, fps_log.size(), 0, title, 0.0f, 100.0f, ImVec2(310, 100));
+	sprintf_s(title, 25, "Milliseconds %0.1f", ms_log[ms_log.size() - 1]);
+	ImGui::PlotHistogram("##milliseconds", getHistogramValue, &ms_log, ms_log.size(), 0, title, 0.0f, 40.0f, ImVec2(310, 100));
+	ImGui::End();
+
+	ImGui::Begin("Camera parameters");
+
+	if (ImGui::DragFloat("FOV", &fov, 0.01f, 0.2f, 2.5f))
+	{
+		app->getCamera()->setFOV(fov);
+	}
+
+	if (ImGui::DragFloat("Near Z", &nearZ, 0.01f, 0.01f, farZ - 0.01f))
+	{
+		app->getCamera()->setNear(nearZ);
+	}
+
+	if (ImGui::DragFloat("Far Z", &farZ, 1.0f, nearZ + 0.01f, 100.0f))
+	{
+		app->getCamera()->setFar(farZ);
+	}
+
+	ImGui::End();
+
+	ImGui::Begin("Sampler");
+
+	static const char* samplerNames[] =
+	{
+		"Linear / Wrap",
+		"Point / Wrap",
+		"Linear / Clamp",
+		"Point / Clamp"
+	};
+
+	if (ImGui::Combo("Type", &samplerType, samplerNames, ModuleSampler::COUNT))
+	{
+		app->getExercise6()->setSampler(ModuleSampler::Type(samplerType));
+	}
+
+	ImGui::End();
+
+	ImGui::Begin("Debug");
+
+	if (ImGui::Checkbox("Show Axis", &axisOn))
+	{
+		app->getExercise6()->setShowAxis(axisOn);
+	}
+	if (ImGui::Checkbox("Show Grid", &gridOn))
+	{
+		app->getExercise6()->setShowGrid(gridOn);
+	}
+	if (ImGui::Checkbox("Show Guizmo", &guizmoOn))
+	{
+		app->getExercise6()->setShowGuizmo(guizmoOn);
+	}
+
+	Matrix objectMatrix = app->getExercise5()->getModel()->getModelMatrix();
+
+	static ImGuizmo::OPERATION gizmoOperation = ImGuizmo::TRANSLATE;
+	if (ImGui::IsKeyPressed(ImGuiKey_W)) gizmoOperation = ImGuizmo::TRANSLATE;
+	if (ImGui::IsKeyPressed(ImGuiKey_E)) gizmoOperation = ImGuizmo::ROTATE;
+	if (ImGui::IsKeyPressed(ImGuiKey_R)) gizmoOperation = ImGuizmo::SCALE;
+
+	ImGui::RadioButton("Translate", (int*)&gizmoOperation, (int)ImGuizmo::TRANSLATE);
+	ImGui::SameLine();
+	ImGui::RadioButton("Rotate", (int*)&gizmoOperation, ImGuizmo::ROTATE);
+	ImGui::SameLine();
+	ImGui::RadioButton("Scale", (int*)&gizmoOperation, ImGuizmo::SCALE);
+
+	float translation[3], rotation[3], scale[3];
+	ImGuizmo::DecomposeMatrixToComponents((float*)&objectMatrix, translation, rotation, scale);
+	bool transform_changed = ImGui::DragFloat3("Tr", translation, 0.1f);
+	transform_changed = transform_changed || ImGui::DragFloat3("Rt", rotation, 0.1f);
+	transform_changed = transform_changed || ImGui::DragFloat3("Sc", scale, 0.1f);
+
+	if (transform_changed)
+	{
+		ImGuizmo::RecomposeMatrixFromComponents(translation, rotation, scale, (float*)&objectMatrix);
+
+		app->getExercise5()->getModel()->setModelMatrix(objectMatrix);
+	}
+
+	ImGui::End();
+
+	if (guizmoOn)
+	{
+		const Matrix& viewMatrix = app->getCamera()->getViewMatrix();
+		const Matrix& projMatrix = app->getCamera()->getProjectionMatrix();
+
+		// Manipulate the object
+		ImGuizmo::Manipulate((const float*)&viewMatrix, (const float*)&projMatrix, gizmoOperation, ImGuizmo::LOCAL, (float*)&objectMatrix);
+	}
+
+	if (ImGuizmo::IsUsing())
+	{
+		//no entra
+		app->getExercise5()->getModel()->setModelMatrix(objectMatrix);
+	}
+
+	ModuleExercise6::Light& light = app->getExercise6()->getLight();
 	if (ImGui::CollapsingHeader("Light", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::DragFloat3("Light Direction", reinterpret_cast<float*>(&light.L), 0.1f, -1.0f, 1.0f);
@@ -344,7 +512,7 @@ void ModuleEditor::exercise6GUI()
 		ImGui::ColorEdit3("Ambient Colour", reinterpret_cast<float*>(&light.Ac), ImGuiColorEditFlags_NoAlpha);
 	}
 
-	for (Material* material : app->getCurrentExercise()->getModel()->getMaterials())
+	for (Material* material : app->getExercise6()->getModel()->getMaterials())
 	{
 		if (material->getMaterialType() == Material::Phong)
 		{
@@ -382,7 +550,7 @@ void ModuleEditor::exercise6GUI()
 				}
 			}
 		}
-	}*/
+	}
 }
 
 void ModuleEditor::exercise7GUI()
@@ -436,7 +604,7 @@ void ModuleEditor::exercise7GUI()
 
 	if (ImGui::Combo("Type", &samplerType, samplerNames, ModuleSampler::COUNT))
 	{
-		app->getCurrentExercise()->setSampler(ModuleSampler::Type(samplerType));
+		app->getExercise7()->setSampler(ModuleSampler::Type(samplerType));
 	}
 
 	ImGui::End();
@@ -445,19 +613,19 @@ void ModuleEditor::exercise7GUI()
 
 	if (ImGui::Checkbox("Show Axis", &axisOn))
 	{
-		app->getCurrentExercise()->setShowAxis(axisOn);
+		app->getExercise7()->setShowAxis(axisOn);
 	}
 	if (ImGui::Checkbox("Show Grid", &gridOn))
 	{
-		app->getCurrentExercise()->setShowGrid(gridOn);
+		app->getExercise7()->setShowGrid(gridOn);
 	}
 
 	if (ImGui::Checkbox("Show Guizmo", &guizmoOn))
 	{
-		app->getCurrentExercise()->setShowGuizmo(guizmoOn);
+		app->getExercise7()->setShowGuizmo(guizmoOn);
 	}
 
-	Matrix objectMatrix = app->getCurrentExercise()->getModel()->getModelMatrix();
+	Matrix objectMatrix = app->getExercise7()->getModel()->getModelMatrix();
 
 	static ImGuizmo::OPERATION gizmoOperation = ImGuizmo::TRANSLATE;
 	if (ImGui::IsKeyPressed(ImGuiKey_W)) gizmoOperation = ImGuizmo::TRANSLATE;
@@ -480,14 +648,14 @@ void ModuleEditor::exercise7GUI()
 	{
 		ImGuizmo::RecomposeMatrixFromComponents(translation, rotation, scale, (float*)&objectMatrix);
 
-		app->getCurrentExercise()->getModel()->setModelMatrix(objectMatrix);
+		app->getExercise7()->getModel()->setModelMatrix(objectMatrix);
 	}
 
 	ImGui::End();
 
 	/////////////////
 	ImGui::Begin("Material Parameters");
-	ModuleExercise7::Light& light = app->getCurrentExercise()->getLight();
+	ModuleExercise7::Light& light = app->getExercise7()->getLight();
 	if (ImGui::CollapsingHeader("Light", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::DragFloat3("Light Direction", reinterpret_cast<float*>(&light.L), 0.1f, -1.0f, 1.0f);
@@ -500,7 +668,7 @@ void ModuleEditor::exercise7GUI()
 		ImGui::ColorEdit3("Ambient Colour", reinterpret_cast<float*>(&light.Ac), ImGuiColorEditFlags_NoAlpha);
 	}
 	
-	for (Material* material : app->getCurrentExercise()->getModel()->getMaterials())
+	for (Material* material : app->getExercise7()->getModel()->getMaterials())
 	{
 		if (material->getMaterialType() == Material::Phong)
 		{
@@ -583,7 +751,7 @@ void ModuleEditor::exercise7GUI()
 	ImVec2 min = ImGui::GetWindowContentRegionMin();
 	canvasPos = min;
 	ImVec2 canvasSize = ImVec2(max.x - min.x, max.y - min.y);
-	app->getCurrentExercise()->setCanvasSize(canvasSize);
+	app->getExercise7()->setCanvasSize(canvasSize);
 
 	ImVec2 cursorPos = ImGui::GetCursorScreenPos();
 
@@ -615,14 +783,14 @@ void ModuleEditor::exercise7GUI()
 
 	if (ImGuizmo::IsUsing())
 	{
-		app->getCurrentExercise()->getModel()->setModelMatrix(objectMatrix);
+		app->getExercise7()->getModel()->setModelMatrix(objectMatrix);
 	}
 	///////////////
 	//renderToTexture();
 }
 
 void ModuleEditor::renderToTexture()
-{
+{//Exercise 7. Si lo necesitamos en otros ejercicios, habrá que eliminar esta funcion y pegarla en el GUI de cada ejercicio con los punteros correspondientes (getExerciseX())
 	bool viewerFocused = false;
 	ImGui::Begin("Scene");
 	const char* frameName = "Scene Frame";
@@ -632,7 +800,7 @@ void ModuleEditor::renderToTexture()
 	ImVec2 min = ImGui::GetWindowContentRegionMin();
 	canvasPos = min;
 	ImVec2 canvasSize = ImVec2(max.x - min.x, max.y - min.y);
-	app->getCurrentExercise()->setCanvasSize(canvasSize);
+	app->getExercise7()->setCanvasSize(canvasSize);
 	
 	ImVec2 cursorPos = ImGui::GetCursorScreenPos();
 
@@ -644,7 +812,7 @@ void ModuleEditor::renderToTexture()
 		ImGui::Image((ImTextureID)renderTexture->getSRVHandle().ptr, canvasSize);
 	}
 
-	Matrix objectMatrix = app->getCurrentExercise()->getModel()->getModelMatrix();
+	Matrix objectMatrix = app->getExercise7()->getModel()->getModelMatrix();
 
 	if (guizmoOn)
 	{
@@ -666,6 +834,6 @@ void ModuleEditor::renderToTexture()
 
 	if (ImGuizmo::IsUsing())
 	{
-		app->getCurrentExercise()->getModel()->setModelMatrix(objectMatrix);
+		app->getExercise7()->getModel()->setModelMatrix(objectMatrix);
 	}
 }

@@ -44,8 +44,8 @@ Application::Application(int argc, wchar_t** argv, void* hWnd)
     ++exerciseCount;
     modules.push_back(editor = new ModuleEditor((HWND)hWnd, d3d12)); //ModuleEditor no funciona por si solo. tiene que ir despues de un modulo q renderize (los ejercicios)
 
-	exercise7->setIsExercise7(true);
-	currentExerciseIndex = 5;
+    setCurrentExercise(7);
+	//currentExerciseIndex = 5;
 }
 
 Application::~Application()
@@ -124,7 +124,7 @@ bool Application::cleanUp()
 
 void Application::setCurrentExercise(int exerciseIndex)
 {
-    if (exerciseIndex < 0 || exerciseIndex >= exerciseCount || exerciseIndex == currentExerciseIndex) return;
+    if (exerciseIndex < 0 || exerciseIndex > exerciseCount + 1 || exerciseIndex == currentExerciseIndex) return;
     switch(currentExerciseIndex)
     {
 	    case 2: exercise2->setIsExercise2(false); break;

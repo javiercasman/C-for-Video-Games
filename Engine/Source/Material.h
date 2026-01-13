@@ -45,6 +45,7 @@ public:
 	const PBRPhongMaterialData& getPBRMaterial() const { if (type == PBRPhong) return materialData.pbrPhong; }
 
 	ModuleShaderDescriptors* getDescriptors() const { return descriptors; }
+	CD3DX12_GPU_DESCRIPTOR_HANDLE getGPUHandle() const;
 	MaterialType getMaterialType() const { return type; }
 	const std::string& getName() const { return name; }
 
@@ -64,4 +65,5 @@ private:
 	ComPtr<ID3D12Resource> colourTex;
 
 	ModuleShaderDescriptors* descriptors;
+	UINT descriptorIdx;
 };

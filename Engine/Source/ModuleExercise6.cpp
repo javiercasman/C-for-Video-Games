@@ -11,6 +11,7 @@
 #include "ModuleSampler.h"
 #include "Model.h"
 #include "ModuleRingBuffer.h"
+#include "ModuleEditor.h"
 
 ModuleExercise6::ModuleExercise6(ModuleD3D12* d3D12, ModuleCamera* Camera, ModuleRingBuffer* RingBuffer) : d3d12(d3D12), camera(Camera), ringBuffer(RingBuffer)
 {
@@ -48,6 +49,8 @@ void ModuleExercise6::render()
 	commandAllocator = d3d12->getCommandAllocator();
 	//reset commandallocator
 	commandList->Reset(commandAllocator, pso.Get());
+
+	app->getEditor()->exercise6GUI();
 
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(d3d12->getCurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	commandList->ResourceBarrier(1, &barrier);

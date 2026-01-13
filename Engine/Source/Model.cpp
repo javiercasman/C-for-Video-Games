@@ -14,7 +14,14 @@
 
 #define SCALE_FACTOR 0.01f
 
-struct PerInstance
+struct PerInstancePhong
+{
+	Matrix modelMat;
+	Matrix normalMat;
+	PhongMaterialData material;
+};
+
+struct PerInstancePBR
 {
 	Matrix modelMat;
 	Matrix normalMat;
@@ -78,11 +85,30 @@ void Model::draw(ID3D12GraphicsCommandList* commandList) const
 		{
 			const Material* material = materials[mesh->getMaterialIndex()];
 
-			PerInstance perInstance = { modelMatrix.Transpose(), normalMatrix.Transpose(), material->getPBRMaterial() };//esto solo sirve para el ejercicio 6, habra que cambiarlo
+			if (app->getCurrentExerciseIndex() >= 6)
+			{
+				if (app->getCurrentExerciseIndex() == 6)
+				{
+					PerInstancePhong perInstance = {};
+					perInstance = { modelMatrix.Transpose(), normalMatrix.Transpose(), material->getPhongMaterial() };//esto solo sirve para el ejercicio 6, habra que cambiarlo
+					commandList->SetGraphicsRootConstantBufferView(2, app->getRingBuffer()->AllocBuffer(&perInstance, alignUp(sizeof(perInstance), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT)));
+				}
+				else if (app->getCurrentExerciseIndex() == 7)
+				{
+					PerInstancePBR perInstance = {};
+					perInstance = { modelMatrix.Transpose(), normalMatrix.Transpose(), material->getPBRMaterial() };//esto solo sirve para el ejercicio 6, habra que cambiarlo
+					commandList->SetGraphicsRootConstantBufferView(2, app->getRingBuffer()->AllocBuffer(&perInstance, alignUp(sizeof(perInstance), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT)));
+				}
+				commandList->SetGraphicsRootDescriptorTable(3, material->getGPUHandle());
+			}
+			else
+			{
+				commandList->SetGraphicsRootConstantBufferView(1, materialBuffers[mesh->getMaterialIndex()]->GetGPUVirtualAddress()); //ej 5
+				commandList->SetGraphicsRootDescriptorTable(2, material->getGPUHandle());
+			}
 			
-			//commandList->SetGraphicsRootConstantBufferView(1, materialBuffers[mesh->getMaterialIndex()]->GetGPUVirtualAddress()); no sirve a partir del ejercicio 6, habra que cambiarlo
-			commandList->SetGraphicsRootConstantBufferView(2, app->getRingBuffer()->AllocBuffer(&perInstance, alignUp(sizeof(perInstance), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT)));
-			commandList->SetGraphicsRootDescriptorTable(3, material->getDescriptors()->getGPUHandle(0)); //0 pq es el indice 0 el q tiene el material
+			//commandList->SetGraphicsRootDescriptorTable(3, material->getDescriptors()->getGPUHandle(0)); //0 pq es el indice 0 el q tiene el material
+			
 
 			mesh->draw(commandList);
 		}

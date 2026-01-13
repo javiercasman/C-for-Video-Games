@@ -64,14 +64,21 @@ void Material::load(const tinygltf::Model& model, const tinygltf::Material& mate
 	}
 
 	/* 
-	esto solo sirve para el ejercicio 5. como vamos por el 6, lo comento. habrá que hacer cambios para meter esto en el ej5 y que funcione bien. me gustaria tener un codigo mas sencillo, que solo seleccionando el ejercicio funcione todo.0
-	materialBuffers.push_back(app->getResources()->createDefaultBuffer(&materialData, alignUp(sizeof(MaterialData), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT), "Material Buffer")); //cambiar por ring buffer, ahora entiendo por que no lo hace aqui sino en el module exercise
-	*/
+	esto solo sirve para el ejercicio 5. como vamos por el 6, lo comento. habrá que hacer cambios para meter esto en el ej5 y que funcione bien. me gustaria tener un codigo mas sencillo, que solo seleccionando el ejercicio funcione todo.*/
+	if (app->getCurrentExerciseIndex() == 5) materialBuffers.push_back(app->getResources()->createDefaultBuffer(&materialData, alignUp(sizeof(BasicMaterialData), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT), "Material Buffer")); //cambiar por ring buffer, ahora entiendo por que no lo hace aqui sino en el module exercise
 	descriptors = app->getShaderDescriptors();
 
-	if (materialData.basic.hasColourTexture)
-		descriptors->createSRV(colourTex.Get(), 0);
+	if (materialData.basic.hasColourTexture) 
+	{
+		descriptorIdx = descriptors->allocDescriptor();
+		descriptors->createSRV(colourTex.Get(), descriptorIdx);
+	}
 
 	else
 		descriptors->createNullTexture2DSRV();
+}
+
+CD3DX12_GPU_DESCRIPTOR_HANDLE Material::getGPUHandle() const
+{
+	return descriptors->getGPUHandle(descriptorIdx);
 }
