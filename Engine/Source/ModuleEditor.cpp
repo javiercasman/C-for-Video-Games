@@ -62,6 +62,10 @@ void ModuleEditor::preRender()
 	imGui->startFrame();
 	ImGuizmo::BeginFrame();
 
+	UINT width; UINT height;
+	d3d12->getWindowSize(width, height);
+	ImGuizmo::SetRect(0, 0, float(width), float(height));
+	/* con rendertotexture (ej 7) funciona, en los otros no
 	ImGuiID dockspace_id = ImGui::GetID("MyDockNodeId");
 	ImGui::DockSpaceOverViewport(dockspace_id);
 
@@ -82,7 +86,7 @@ void ModuleEditor::preRender()
 		ImGui::DockBuilderDockWindow("Scene", dock_id_left);
 
 		ImGui::DockBuilderFinish(dockspace_id);
-	}
+	}*/
 }
 
 void ModuleEditor::render()
@@ -357,7 +361,7 @@ void ModuleEditor::exercise5GUI()
 	ImGuizmo::DecomposeMatrixToComponents((float*)&objectMatrix, translation, rotation, scale);
 	bool transform_changed = ImGui::DragFloat3("Tr", translation, 0.1f);
 	transform_changed = transform_changed || ImGui::DragFloat3("Rt", rotation, 0.1f);
-	transform_changed = transform_changed || ImGui::DragFloat3("Sc", scale, 0.1f);
+	transform_changed = transform_changed || ImGui::DragFloat3("Sc", scale, 0.0001f);
 
 	if (transform_changed)
 	{
@@ -379,12 +383,8 @@ void ModuleEditor::exercise5GUI()
 
 	if (ImGuizmo::IsUsing())
 	{
-		//no entra
 		app->getExercise5()->getModel()->setModelMatrix(objectMatrix);
 	}
-	/*
-	Interfiere con ejercicio 7. se comenta. habra que mejorar en un futuro para hacerlo mas ordenado y que pueda usarse en todos los ejercicios
-	*/
 }
 
 void ModuleEditor::exercise6GUI()
@@ -456,7 +456,7 @@ void ModuleEditor::exercise6GUI()
 		app->getExercise6()->setShowGuizmo(guizmoOn);
 	}
 
-	Matrix objectMatrix = app->getExercise5()->getModel()->getModelMatrix();
+	Matrix objectMatrix = app->getExercise6()->getModel()->getModelMatrix();
 
 	static ImGuizmo::OPERATION gizmoOperation = ImGuizmo::TRANSLATE;
 	if (ImGui::IsKeyPressed(ImGuiKey_W)) gizmoOperation = ImGuizmo::TRANSLATE;
@@ -473,31 +473,16 @@ void ModuleEditor::exercise6GUI()
 	ImGuizmo::DecomposeMatrixToComponents((float*)&objectMatrix, translation, rotation, scale);
 	bool transform_changed = ImGui::DragFloat3("Tr", translation, 0.1f);
 	transform_changed = transform_changed || ImGui::DragFloat3("Rt", rotation, 0.1f);
-	transform_changed = transform_changed || ImGui::DragFloat3("Sc", scale, 0.1f);
+	transform_changed = transform_changed || ImGui::DragFloat3("Sc", scale, 0.0001f);
 
 	if (transform_changed)
 	{
 		ImGuizmo::RecomposeMatrixFromComponents(translation, rotation, scale, (float*)&objectMatrix);
 
-		app->getExercise5()->getModel()->setModelMatrix(objectMatrix);
+		app->getExercise6()->getModel()->setModelMatrix(objectMatrix);
 	}
 
 	ImGui::End();
-
-	if (guizmoOn)
-	{
-		const Matrix& viewMatrix = app->getCamera()->getViewMatrix();
-		const Matrix& projMatrix = app->getCamera()->getProjectionMatrix();
-
-		// Manipulate the object
-		ImGuizmo::Manipulate((const float*)&viewMatrix, (const float*)&projMatrix, gizmoOperation, ImGuizmo::LOCAL, (float*)&objectMatrix);
-	}
-
-	if (ImGuizmo::IsUsing())
-	{
-		//no entra
-		app->getExercise5()->getModel()->setModelMatrix(objectMatrix);
-	}
 
 	ModuleExercise6::Light& light = app->getExercise6()->getLight();
 	if (ImGui::CollapsingHeader("Light", ImGuiTreeNodeFlags_DefaultOpen))
@@ -550,6 +535,21 @@ void ModuleEditor::exercise6GUI()
 				}
 			}
 		}
+	}
+
+	if (guizmoOn)
+	{
+		const Matrix& viewMatrix = app->getCamera()->getViewMatrix();
+		const Matrix& projMatrix = app->getCamera()->getProjectionMatrix();
+
+		// Manipulate the object
+		ImGuizmo::Manipulate((const float*)&viewMatrix, (const float*)&projMatrix, gizmoOperation, ImGuizmo::LOCAL, (float*)&objectMatrix);
+	}
+
+	if (ImGuizmo::IsUsing())
+	{
+		//no entra
+		app->getExercise6()->getModel()->setModelMatrix(objectMatrix);
 	}
 }
 
@@ -622,7 +622,7 @@ void ModuleEditor::exercise7GUI()
 
 	if (ImGui::Checkbox("Show Guizmo", &guizmoOn))
 	{
-		app->getExercise7()->setShowGuizmo(guizmoOn);
+		app->getExercise7()->setShowGuizmo(guizmoOn); //no sirve
 	}
 
 	Matrix objectMatrix = app->getExercise7()->getModel()->getModelMatrix();
@@ -642,7 +642,7 @@ void ModuleEditor::exercise7GUI()
 	ImGuizmo::DecomposeMatrixToComponents((float*)&objectMatrix, translation, rotation, scale);
 	bool transform_changed = ImGui::DragFloat3("Tr", translation, 0.1f);
 	transform_changed = transform_changed || ImGui::DragFloat3("Rt", rotation, 0.1f);
-	transform_changed = transform_changed || ImGui::DragFloat3("Sc", scale, 0.1f);
+	transform_changed = transform_changed || ImGui::DragFloat3("Sc", scale, 0.0001f);
 
 	if (transform_changed)
 	{

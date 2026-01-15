@@ -50,8 +50,6 @@ void ModuleExercise6::render()
 	//reset commandallocator
 	commandList->Reset(commandAllocator, pso.Get());
 
-	app->getEditor()->exercise6GUI();
-
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(d3d12->getCurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	commandList->ResourceBarrier(1, &barrier);
 
@@ -107,6 +105,8 @@ void ModuleExercise6::render()
 	commandList->SetGraphicsRootConstantBufferView(1, ringBuffer->AllocBuffer(&perFrame, alignUp(sizeof(perFrame), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT)));
 
 	model->draw(commandList);
+
+	app->getEditor()->exercise6GUI();
 
 	if (showGrid) dd::xzSquareGrid(-10.0f, 10.0f, 0.0f, 1.0f, dd::colors::LightGray); // Grid plane
 	if (showAxis) dd::axisTriad(ddConvert(Matrix::Identity), 0.1f, 1.0f); // XYZ axis

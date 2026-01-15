@@ -52,11 +52,15 @@ void ModuleD3D12::preRender()
 	currentBackBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
 	//Esperar a que el CommandAllocator del frame actual esté libre (usando la fence).
-	if (Fence->GetCompletedValue() < fenceValues[currentBackBufferIndex])
+	//if (Fence->GetCompletedValue() < fenceValues[currentBackBufferIndex])
+	if (fenceValues[currentBackBufferIndex] != 0)
 	{
 		Fence->SetEventOnCompletion(fenceValues[currentBackBufferIndex], fenceEvent);
 		WaitForSingleObject(fenceEvent, INFINITE);
 
+		// 2. UPDATE GLOBAL PROGRESS:
+		// The GPU has finished the frame stored in 'frameValues[currentBackBufferIndex]'.
+		// Therefore, 'lastCompletedFrame' can be at least this value.
 		lastCompletedFrame = std::max(lastCompletedFrame, frameValues[currentBackBufferIndex]);
 	}
 

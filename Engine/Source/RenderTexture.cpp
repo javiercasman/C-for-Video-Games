@@ -9,6 +9,11 @@ RenderTexture::RenderTexture(const char* name, DXGI_FORMAT format, const Vector4
 {
 }
 
+RenderTexture::~RenderTexture()
+{
+}
+
+
 void RenderTexture::resize(unsigned int newWidth, unsigned int newHeight)
 {
 	if (width == newWidth && height == newHeight)
@@ -29,7 +34,7 @@ void RenderTexture::resize(unsigned int newWidth, unsigned int newHeight)
 
 	if (depthFormat != DXGI_FORMAT_UNKNOWN)
 	{
-		resources->deferRelease(texture);
+		resources->deferRelease(depthTexture);
 		depthTexture = resources->createDepthStencil(size_t(width), size_t(height), depthFormat, clearDepth, 0, name);
 
 		dsvIndex = dsvDescriptors->allocDescriptor();

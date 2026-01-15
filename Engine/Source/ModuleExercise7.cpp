@@ -50,6 +50,8 @@ bool ModuleExercise7::init()
 
 void ModuleExercise7::preRender()
 {
+	if (canvasSize.x > 0.0f && canvasSize.y > 0.0f)
+		renderTexture->resize(int(canvasSize.x), int(canvasSize.y));
 }
 
 void ModuleExercise7::renderToTexture()
@@ -98,7 +100,7 @@ void ModuleExercise7::renderToTexture()
 
 	if (showGrid) dd::xzSquareGrid(-10.0f, 10.0f, 0.0f, 1.0f, dd::colors::LightGray); // Grid plane
 	if (showAxis) dd::axisTriad(ddConvert(Matrix::Identity), 0.1f, 1.0f); // XYZ axis
-	debugDraw->record(commandList, windowWidth, windowHeight, viewMatrix, projMatrix);
+	debugDraw->record(commandList, width, height, viewMatrix, projMatrix);
 
 	renderTexture->renderToPixelShader(commandList);
 }
@@ -106,8 +108,6 @@ void ModuleExercise7::renderToTexture()
 void ModuleExercise7::render()
 {
 	if (isCurrentExercise == false) return;
-	if (canvasSize.x > 0.0f && canvasSize.y > 0.0f)
-		renderTexture->resize(int(canvasSize.x), int(canvasSize.y));
 	app->getEditor()->exercise7GUI();
 	commandAllocator = d3d12->getCommandAllocator();
 	//reset commandallocator
