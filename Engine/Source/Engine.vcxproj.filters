@@ -82,6 +82,7 @@
     <ClInclude Include="RenderTexture.h" />
     <ClInclude Include="ModuleRTDescriptors.h" />
     <ClInclude Include="ModuleDSDescriptors.h" />
+    <ClInclude Include="HandleManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Engine.rc" />

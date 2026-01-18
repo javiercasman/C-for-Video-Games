@@ -13,7 +13,6 @@ RenderTexture::~RenderTexture()
 {
 }
 
-
 void RenderTexture::resize(unsigned int newWidth, unsigned int newHeight)
 {
 	if (width == newWidth && height == newHeight)
@@ -26,7 +25,10 @@ void RenderTexture::resize(unsigned int newWidth, unsigned int newHeight)
 	resources->deferRelease(texture);
 	texture = resources->createRenderTargetTexture(size_t(width), size_t(height), format, clearColour, name);
 
-	rtvIndex = rtDescriptors->allocDescriptor();
+	UINT newRtvIndex = rtDescriptors->allocDescriptor();
+	rtDescriptors->releaseRT(rtvIndex);
+	rtvIndex = newRtvIndex;
+
 	rtDescriptors->createRTV(texture.Get(), rtvIndex);
 
 	srvIndex = srvDescriptors->allocDescriptor();
@@ -37,7 +39,10 @@ void RenderTexture::resize(unsigned int newWidth, unsigned int newHeight)
 		resources->deferRelease(depthTexture);
 		depthTexture = resources->createDepthStencil(size_t(width), size_t(height), depthFormat, clearDepth, 0, name);
 
-		dsvIndex = dsvDescriptors->allocDescriptor();
+		UINT newDsvIndex = dsvDescriptors->allocDescriptor();
+		dsvDescriptors->releaseDS(dsvIndex);
+		dsvIndex = newDsvIndex;
+
 		dsvDescriptors->createDSV(depthTexture.Get(), dsvIndex);
 	}
 }

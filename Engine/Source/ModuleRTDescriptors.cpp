@@ -26,17 +26,26 @@ bool ModuleRTDescriptors::init()
 	return true;
 }
 
-void ModuleRTDescriptors::createRTV(ID3D12Resource* texture, UINT rtvIndex)
+void ModuleRTDescriptors::createRTV(ID3D12Resource* texture, UINT handle)
 {
-	device->CreateRenderTargetView(texture, nullptr, getCPUHandle(rtvIndex));
+	device->CreateRenderTargetView(texture, nullptr, getCPUHandle(handle));
 }
 
 UINT ModuleRTDescriptors::allocDescriptor()
 {
-	return rtvCount++;
+	UINT handle = rtHandles.allocHandle();
+	_ASSERTE(rtHandles.validHandle(handle));
+	return handle;
+	//return rtvCount++;
 }
 
-void ModuleRTDescriptors::reset()
+/*void ModuleRTDescriptors::reset()
 {
 	rtvCount = 0;
+}*/
+
+void ModuleRTDescriptors::releaseRT(UINT handle)
+{
+	if(handle != 0)
+		rtHandles.freeHandle(handle);
 }

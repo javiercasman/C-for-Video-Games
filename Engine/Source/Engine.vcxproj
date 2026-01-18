@@ -177,6 +177,7 @@
     <ClInclude Include="GamePad.h" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="gltf_utils.h" />
+    <ClInclude Include="HandleManager.h" />
     <ClInclude Include="ImGuiPass.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="Material.h" />

@@ -26,17 +26,26 @@ bool ModuleDSDescriptors::init()
 	return true;
 }
 
-void ModuleDSDescriptors::createDSV(ID3D12Resource* texture, UINT dsvIndex)
+void ModuleDSDescriptors::createDSV(ID3D12Resource* texture, UINT handle)
 {
-	device->CreateDepthStencilView(texture, nullptr, getCPUHandle(dsvIndex));
+	device->CreateDepthStencilView(texture, nullptr, getCPUHandle(handle));
 }
 
 UINT ModuleDSDescriptors::allocDescriptor()
 {
-	return dsvCount++;
+	UINT handle = dsHandles.allocHandle();
+	_ASSERTE(dsHandles.validHandle(handle));
+	return handle;
+	//return dsvCount++;
 }
 
-void ModuleDSDescriptors::reset()
+void ModuleDSDescriptors::releaseDS(UINT handle)
+{
+	if (handle != 0)
+		dsHandles.freeHandle(handle);
+}
+
+/*void ModuleDSDescriptors::reset()
 {
 	dsvCount = 0;
-}
+}*/
