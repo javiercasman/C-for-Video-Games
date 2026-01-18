@@ -61,6 +61,7 @@ void ModuleD3D12::preRender()
 		// 2. UPDATE GLOBAL PROGRESS:
 		// The GPU has finished the frame stored in 'frameValues[currentBackBufferIndex]'.
 		// Therefore, 'lastCompletedFrame' can be at least this value.
+		fenceValues[currentBackBufferIndex];
 		lastCompletedFrame = std::max(lastCompletedFrame, frameValues[currentBackBufferIndex]);
 	}
 

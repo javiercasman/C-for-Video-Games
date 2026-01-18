@@ -30,6 +30,7 @@ private:
 	struct DeferredRelease
 	{
 		ComPtr<ID3D12Resource> resource;
+		//ID3D12Resource* resource;
 		UINT frameIndex = 0;
 	};
 

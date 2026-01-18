@@ -203,6 +203,7 @@ ComPtr<ID3D12Resource> ModuleResources::createRenderTargetTexture(size_t width, 
 
 void ModuleResources::preRender()
 {
+	/*
 	UINT completedFrame = app->getD3D12()->getLastCompletedFrame();
 
 	for (int i = 0; i < m_deferredReleases.size(); ++i)
@@ -217,13 +218,30 @@ void ModuleResources::preRender()
 			++i;
 		}
 	}
+	*/
+	auto it = m_deferredReleases.begin();
+	UINT lastCompletedFrame = d3d12->getLastCompletedFrame();
+	while (it != m_deferredReleases.end()) 
+	{
+		if (it->frameIndex <= lastCompletedFrame) 
+		{
+			// GPU is done with this frame, safe to release!
+			it->resource.Reset();
+			it = m_deferredReleases.erase(it);
+		}
+		else 
+		{
+			++it;
+		}
+	}
+
 }
 
 void ModuleResources::deferRelease(ComPtr<ID3D12Resource> resource)
 {
 	if (resource)
 	{
-		UINT currentFrame = app->getD3D12()->getLastCompletedFrame();
+		UINT currentFrame = app->getD3D12()->getCurrentFrame();
 
 		auto it = std::find_if(m_deferredReleases.begin(), m_deferredReleases.end(), [resource](const DeferredRelease& item) -> bool
 			{ return item.resource.Get() == resource.Get(); });
@@ -237,5 +255,23 @@ void ModuleResources::deferRelease(ComPtr<ID3D12Resource> resource)
 			m_deferredReleases.push_back({ resource, currentFrame });
 		}
 	}
+	/*
+	if (resource)
+	{
+		UINT currentFrame = app->getD3D12()->getCurrentFrame();
+
+		auto it = std::find_if(m_deferredReleases.begin(), m_deferredReleases.end(), [resource](const DeferredRelease& item) -> bool
+			{ return item.resource == resource.Get(); });
+
+		if (it != m_deferredReleases.end())
+		{
+			it->frameIndex = currentFrame;
+		}
+		else
+		{
+			m_deferredReleases.push_back({ resource.Get(), currentFrame});
+		}
+	}*/
+	//m_deferredReleases.push_back({ resource, d3d12->getCurrentFrame() });
 }
 

@@ -29,9 +29,14 @@ bool ModuleShaderDescriptors::init()
 	return true;
 }
 
-void ModuleShaderDescriptors::createSRV(ID3D12Resource* texture, UINT srvIndex)
+void ModuleShaderDescriptors::preRender()
 {
-	device->CreateShaderResourceView(texture, nullptr, getCPUHandle(srvIndex));
+	collectGarbage();
+}
+
+void ModuleShaderDescriptors::createSRV(ID3D12Resource* texture, UINT handle)
+{
+	device->CreateShaderResourceView(texture, nullptr, getCPUHandle(handle));
 }
 
 UINT ModuleShaderDescriptors::createNullTexture2DSRV()
@@ -56,10 +61,24 @@ UINT ModuleShaderDescriptors::createNullTexture2DSRV()
 
 UINT ModuleShaderDescriptors::allocDescriptor()
 {
-	return srvCount++;
+	UINT handle = srvHandles.allocHandle();
+	_ASSERTE(srvHandles.validHandle(handle));
+	return handle;
+	//return srvCount++;
 }
 
 void ModuleShaderDescriptors::reset()
 {
 	srvCount = 0;
+}
+
+void ModuleShaderDescriptors::deferRelease(UINT handle)
+{
+	if (handle != 0)
+		srvHandles.deferRelease(handle, d3d12->getCurrentFrame());
+}
+
+void ModuleShaderDescriptors::collectGarbage()
+{
+	srvHandles.collectGarbage(d3d12->getLastCompletedFrame());
 }

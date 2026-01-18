@@ -31,7 +31,10 @@ void RenderTexture::resize(unsigned int newWidth, unsigned int newHeight)
 
 	rtDescriptors->createRTV(texture.Get(), rtvIndex);
 
-	srvIndex = srvDescriptors->allocDescriptor();
+	UINT newSrvIndex = srvDescriptors->allocDescriptor();
+	srvDescriptors->deferRelease(srvIndex);
+	srvIndex = newSrvIndex;
+
 	srvDescriptors->createSRV(texture.Get(), srvIndex);
 
 	if (depthFormat != DXGI_FORMAT_UNKNOWN)
