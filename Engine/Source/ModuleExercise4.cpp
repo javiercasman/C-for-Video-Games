@@ -29,7 +29,11 @@ bool ModuleExercise4::init()
 		shaderDescriptors = app->getShaderDescriptors();
 		samplers = app->getSampler();
 
-		textureDog = resources->createTextureFromFile(std::wstring(L"../Game/Assets/Textures/dog.dds"));
+		std::string assetsPath = getAssetsPath("Assets/Textures/");
+		std::string ddsPath = assetsPath + "dog.dds";
+
+		//textureDog = resources->createTextureFromFile(std::wstring(L"../Game/Assets/Textures/dog.dds"));
+		textureDog = resources->createTextureFromFile(ddsPath);
 		ret = ret && textureDog;
 
 		if (ret)

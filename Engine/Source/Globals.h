@@ -32,6 +32,7 @@ using Microsoft::WRL::ComPtr;
 
 #define LOG(format, ...) log(__FILE__, __LINE__, format, __VA_ARGS__);
 void log(const char file[], int line, const char* format, ...);
+std::string getAssetsPath(const std::string& relativePath);
 
 #define FRAMES_IN_FLIGHT 3
 
